@@ -3,8 +3,6 @@ package posting
 type IssueCode string
 
 const (
-	LocationMissing       IssueCode = "location_missing"
-	CountryUnknown        IssueCode = "country_unknown"
 	SalaryMissing         IssueCode = "salary_missing"
 	SalaryInvalid         IssueCode = "salary_invalid"
 	SalaryUnitAmbiguous   IssueCode = "salary_unit_ambiguous"
