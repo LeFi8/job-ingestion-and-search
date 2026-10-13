@@ -4,3 +4,7 @@ formatters:
   enable:
     - gofmt
     - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/lefi8/job-ingestion-and-search/backend

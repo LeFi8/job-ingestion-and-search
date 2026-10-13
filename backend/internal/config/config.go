@@ -5,24 +5,33 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 )
 
 type Env struct{ errs []error }
 
-func (e *Env) String(key string) string {
+func (e *Env) lookup(key string) (string, bool) {
 	value, ok := os.LookupEnv(key)
 	if !ok {
 		e.errs = append(e.errs, fmt.Errorf("%s: missing", key))
-		return ""
+		return "", false
 	}
+	if strings.TrimSpace(value) == "" {
+		e.errs = append(e.errs, fmt.Errorf("%s: empty", key))
+		return "", false
+	}
+	return value, true
+}
+
+func (e *Env) String(key string) string {
+	value, _ := e.lookup(key)
 	return value
 }
 
 func (e *Env) Int(key string) int {
-	raw, ok := os.LookupEnv(key)
+	raw, ok := e.lookup(key)
 	if !ok {
-		e.errs = append(e.errs, fmt.Errorf("%s: missing", key))
 		return 0
 	}
 	value, err := strconv.Atoi(raw)
@@ -34,9 +43,8 @@ func (e *Env) Int(key string) int {
 }
 
 func (e *Env) Duration(key string) time.Duration {
-	raw, ok := os.LookupEnv(key)
+	raw, ok := e.lookup(key)
 	if !ok {
-		e.errs = append(e.errs, fmt.Errorf("%s: missing", key))
 		return 0
 	}
 	value, err := time.ParseDuration(raw)

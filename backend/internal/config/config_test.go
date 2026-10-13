@@ -1,6 +1,7 @@
 package config
 
 import (
+	"os"
 	"strings"
 	"testing"
 	"time"
@@ -12,16 +13,29 @@ const (
 	keyC = "JIS_TEST_CFG_C"
 )
 
+func unsetForTest(t *testing.T, keys ...string) {
+	t.Helper()
+	for _, key := range keys {
+		t.Setenv(key, "")
+		if err := os.Unsetenv(key); err != nil {
+			t.Fatalf("Unsetenv(%s): %v", key, err)
+		}
+	}
+}
+
 func TestEnvReportsAllMissingKeys(t *testing.T) {
+	unsetForTest(t, keyA, keyB, keyC)
+
 	var env Env
 	env.String(keyA)
 	env.Int(keyB)
+	env.Duration(keyC)
 
 	err := env.Err()
 	if err == nil {
 		t.Fatal("Err() = nil, want error")
 	}
-	for _, key := range []string{keyA, keyB} {
+	for _, key := range []string{keyA, keyB, keyC} {
 		if !strings.Contains(err.Error(), key) {
 			t.Errorf("Err() = %q, want it to mention %s", err, key)
 		}
@@ -77,5 +91,28 @@ func TestEnvReadsValidValues(t *testing.T) {
 	}
 	if err := env.Err(); err != nil {
 		t.Errorf("Err() = %v, want nil", err)
+	}
+}
+
+func TestEnvRejectsEmptyValues(t *testing.T) {
+	for _, value := range []string{"", "   "} {
+		t.Setenv(keyA, value)
+		t.Setenv(keyB, value)
+		t.Setenv(keyC, value)
+
+		var env Env
+		env.String(keyA)
+		env.Int(keyB)
+		env.Duration(keyC)
+
+		err := env.Err()
+		if err == nil {
+			t.Fatalf("value %q: Err() = nil, want error", value)
+		}
+		for _, key := range []string{keyA, keyB, keyC} {
+			if want := key + ": empty"; !strings.Contains(err.Error(), want) {
+				t.Errorf("value %q: Err() = %q, want it to contain %q", value, err, want)
+			}
+		}
 	}
 }
