@@ -1,0 +1,325 @@
+[
+  {
+    "title": "Backend Engineer",
+    "description": "Join our backend team to build scalable APIs using Go and microservices architecture.",
+    "company": "NextGen Systems",
+    "location": {
+      "city": "Austin",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 145000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-03",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Frontend Developer Intern",
+    "description": "Looking for an enthusiastic intern to assist in frontend development with React.",
+    "company": "BrightStart Talent",
+    "location": {
+      "city": "Vancouver",
+      "state": "BC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 20000,
+      "currency": "CAD"
+    },
+    "employment_type": "Internship",
+    "posting_date": "2023-10-06",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "description": "Rejoignez notre équipe pour développer des modèles de machine learning avancés.",
+    "company": "DeepData Labs",
+    "location": {
+      "city": "Montreal",
+      "state": "QC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 120000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-11",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Agile Project Lead",
+    "description": "Drive cross-functional teams in a remote-first environment with agile principles.",
+    "company": "Orbit Global",
+    "location": {
+      "city": "Manchester",
+      "state": "England",
+      "country": "UK"
+    },
+    "salary": {
+      "value": 85000,
+      "currency": "GBP"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-13",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "DevOps Consultant",
+    "description": "We are seeking a highly skilled DevOps Consultant.",
+    "company": "CloudWorks Pro",
+    "location": {
+      "city": "Seattle",
+      "state": "WA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 65,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Contract",
+    "posting_date": "2023-10-14",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Software Engineer",
+    "description": "We are looking for a Senior Software Engineer.",
+    "company": "Tech Innovators Inc.",
+    "location": "New York, NY, USA",
+    "salary": 150000,
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-01",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Junior Developer",
+    "description": "An excellent opportunity for a Junior Developer.",
+    "company": "Staffing Solutions",
+    "location": "Toronto, ON, Canada",
+    "salary": 80000,
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-05",
+    "company_type": "Staffing Firm",
+    "language": "",
+    "remote": false
+  },
+  {
+    "title": "Data Scientist",
+    "description": "Nous recherchons un Data Scientist expérimenté.",
+    "company": "Analytics Corp.",
+    "location": "Montreal, QC, Canada",
+    "salary": 62.5,
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-10",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Project Manager",
+    "description": "Lead projects across various domains.",
+    "company": "Global Enterprises",
+    "location": "London, UK",
+    "salary": 80000,
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-12",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "QA Automation Engineer",
+    "description": "Build automated test suites.",
+    "company": "QualityLoop",
+    "location": {
+      "city": "Chicago",
+      "state": "IL",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 110000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-15",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "UX Designer",
+    "description": "Design intuitive user experiences.",
+    "company": "PixelCraft Studio",
+    "location": {
+      "city": "",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 105000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-16",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Product Analyst",
+    "description": "Analyze product usage data.",
+    "company": "MetricMind",
+    "location": "Boston, MA, USA",
+    "salary": 120000,
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-17",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Mobile Engineer",
+    "description": "Develop mobile applications.",
+    "company": "AppForge",
+    "location": {
+      "city": "Berlin",
+      "state": "",
+      "country": "Germany"
+    },
+    "salary": {
+      "value": 78000,
+      "currency": "EUR"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-18",
+    "company_type": "Direct Employer",
+    "language": "German",
+    "remote": false
+  },
+  {
+    "title": "Technical Writer",
+    "description": "Create developer documentation.",
+    "company": "DocuFlow",
+    "location": "Remote",
+    "salary": 90000,
+    "employment_type": "Part-Time",
+    "posting_date": "2023-10-19",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Cybersecurity Specialist",
+    "description": "Monitor security events.",
+    "company": "SecurePath",
+    "location": {
+      "city": "Washington",
+      "state": "DC",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 135000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-20",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Growth Marketing Manager",
+    "description": "Own acquisition campaigns.",
+    "company": "ScaleRocket",
+    "location": "San Francisco, CA, USA",
+    "salary": 125000,
+    "employment_type": "Full-Time",
+    "posting_date": "",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Database Administrator",
+    "description": "Maintain databases.",
+    "company": "DataCore Services",
+    "location": {
+      "city": "Dublin",
+      "state": "Leinster",
+      "country": "Ireland"
+    },
+    "salary": {
+      "value": 58,
+      "currency": "EUR",
+      "unit": "hourly"
+    },
+    "employment_type": "Contract",
+    "posting_date": "2023-10-21",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Business Operations Associate",
+    "description": "Support operations.",
+    "company": "Northstar Group",
+    "location": "Atlanta, GA, USA",
+    "salary": 72000,
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-22",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Customer Success Manager",
+    "description": "Help customers onboard.",
+    "company": "ClientBridge",
+    "location": {
+      "city": "Toronto",
+      "state": "ON",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 110000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-23",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "",
+    "description": "Temporary support role.",
+    "company": "OpsFlex",
+    "location": null,
+    "salary": {
+      "value": 40,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Contract",
+    "posting_date": "2023-10-24",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": true
+  }
+]
