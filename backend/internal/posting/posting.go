@@ -19,7 +19,7 @@ type Salary struct {
 }
 
 type Posting struct {
-	SourceID, IdempotencyKey    string
+	SourceID                    string
 	Title, Description, Company string
 	CompanyType                 CompanyType
 	Location                    *Location
