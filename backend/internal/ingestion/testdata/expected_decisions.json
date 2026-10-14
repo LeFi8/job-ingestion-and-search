@@ -1,0 +1,40 @@
+[
+  {
+    "index": 0,
+    "title": "Backend Engineer",
+    "approved": true,
+    "reasons": []
+  },
+  {
+    "index": 1,
+    "title": "Machine Learning Engineer",
+    "approved": true,
+    "reasons": []
+  },
+  {
+    "index": 2,
+    "title": "Staff Cloud Architect",
+    "approved": true,
+    "reasons": []
+  },
+  {
+    "index": 3,
+    "title": "Frontend Developer Intern",
+    "approved": false,
+    "reasons": [
+      "not_full_time",
+      "salary_below",
+      "staffing_firm"
+    ]
+  },
+  {
+    "index": 4,
+    "title": "Mobile Engineer",
+    "approved": false,
+    "reasons": [
+      "language_not_allowed",
+      "location_not_eligible",
+      "salary_below"
+    ]
+  }
+]
