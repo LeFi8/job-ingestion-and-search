@@ -12,6 +12,7 @@ var errNotObject = errors.New("element is not a JSON object")
 type Record struct {
 	Index   int
 	Posting Posting
+	Raw     json.RawMessage
 }
 
 type Quarantined struct {
@@ -47,7 +48,7 @@ func Decode(r io.Reader) ([]Record, []Quarantined, error) {
 			quarantined = append(quarantined, Quarantined{Index: i, Raw: el, Err: err})
 			continue
 		}
-		recs = append(recs, Record{Index: i, Posting: p})
+		recs = append(recs, Record{Index: i, Posting: p, Raw: el})
 	}
 	return recs, quarantined, nil
 }
