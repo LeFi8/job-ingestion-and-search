@@ -46,6 +46,14 @@ func (l *Lingua) Detect(text string) (posting.Language, bool) {
 		return posting.German, true
 	case lingua.Polish:
 		return posting.Polish, true
+	case lingua.Spanish:
+		return posting.Spanish, true
+	case lingua.Italian:
+		return posting.Italian, true
+	case lingua.Portuguese:
+		return posting.Portuguese, true
+	case lingua.Dutch:
+		return posting.Dutch, true
 	default:
 		return "", false
 	}

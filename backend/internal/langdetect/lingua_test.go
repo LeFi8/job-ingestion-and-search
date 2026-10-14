@@ -34,6 +34,12 @@ func TestLinguaFixture(t *testing.T) {
 			wantReliable: true,
 		},
 		{
+			name:         "Spanish job description",
+			text:         "Buscamos un desarrollador de software con experiencia en sistemas distribuidos y microservicios.",
+			wantLang:     posting.Spanish,
+			wantReliable: true,
+		},
+		{
 			name:         "Short borderline description is unreliable",
 			text:         "Develop mobile applications.",
 			wantLang:     "",

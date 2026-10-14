@@ -13,8 +13,12 @@ const (
 type Language string
 
 const (
-	English Language = "en"
-	French  Language = "fr"
-	German  Language = "de"
-	Polish  Language = "pl"
+	English    Language = "en"
+	French     Language = "fr"
+	German     Language = "de"
+	Polish     Language = "pl"
+	Spanish    Language = "es"
+	Italian    Language = "it"
+	Portuguese Language = "pt"
+	Dutch      Language = "nl"
 )
