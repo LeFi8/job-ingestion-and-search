@@ -10,6 +10,7 @@ tool (
 
 require (
 	cloud.google.com/go v0.123.0
+	github.com/pemistahl/lingua-go v1.4.0
 	github.com/shopspring/decimal v1.4.0
 )
 
