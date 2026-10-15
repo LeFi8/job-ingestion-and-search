@@ -2,8 +2,6 @@ package ingestion
 
 import (
 	"context"
-	"crypto/sha256"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -23,7 +21,7 @@ type Saver interface {
 	Quarantine(ctx context.Context, sourceID string, q raw.Quarantined) error
 }
 
-type Summary struct{ Approved, Rejected, Unchanged, Quarantined, Invalid int }
+type Summary struct{ Approved, Rejected, Unchanged, Quarantined, Invalid, Duplicate int }
 
 func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time, e *approval.Engine, s Saver, log *slog.Logger) (Summary, error) {
 	outcomes, quarantined, err := Evaluate(r, sourceID, e)
@@ -40,11 +38,18 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 		log.Warn("feed.quarantined", "index", q.Index, "error", q.Err.Error())
 	}
 
+	firstIndex := make(map[string]int, len(outcomes))
 	for _, o := range outcomes {
 		rec, err := newRecord(sourceID, decidedAt, o)
 		if err != nil {
 			return sum, fmt.Errorf("build record for element %d: %w", o.Index, err)
 		}
+		if first, dup := firstIndex[rec.IdempotencyKey]; dup {
+			sum.Duplicate++
+			log.Warn("job.duplicate_key", "index", o.Index, "first_index", first, "idempotency_key", rec.IdempotencyKey)
+			continue
+		}
+		firstIndex[rec.IdempotencyKey] = o.Index
 
 		changed, err := s.SaveOutcome(ctx, rec)
 		if errors.Is(err, postgres.ErrInvalid) {
@@ -71,7 +76,7 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 }
 
 func newRecord(sourceID string, decidedAt time.Time, o Outcome) (postgres.PostingRecord, error) {
-	key, err := idempotencyKey(sourceID, o.Raw)
+	key, err := idempotencyKey(sourceID, o.Raw, o.Posting)
 	if err != nil {
 		return postgres.PostingRecord{}, err
 	}
@@ -144,17 +149,4 @@ func reasonCodes(reasons []approval.Reason) []string {
 		codes[i] = string(r.Code)
 	}
 	return codes
-}
-
-func idempotencyKey(sourceID string, p raw.Posting) (string, error) {
-	parts, err := json.Marshal([]string{
-		sourceID, p.Company, p.Title,
-		p.Location.Text, p.Location.City, p.Location.State, p.Location.Country,
-		p.PostingDate,
-	})
-	if err != nil {
-		return "", fmt.Errorf("marshal idempotency key parts: %w", err)
-	}
-	sum := sha256.Sum256(parts)
-	return hex.EncodeToString(sum[:]), nil
 }

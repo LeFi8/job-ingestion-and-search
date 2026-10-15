@@ -283,20 +283,56 @@ func TestRunLogsRejected(t *testing.T) {
 }
 
 func TestRunIdempotencyKey(t *testing.T) {
-	s := newFakeSaver()
-	input := feed(validElement(""), validElement(""), validElement(`,"location":"Boston, MA, USA"`))
+	tests := []struct {
+		name     string
+		a, b     string
+		wantSame bool
+	}{
+		{"identical", validElement(""), validElement(""), true},
+		{"case and whitespace", validElement(""), validElement(`,"title":"  backend   ENGINEER ","company":"nextgen  systems "`), true},
+		{"string vs object location", validElement(""), validElement(`,"location":"Austin, TX, USA"`), true},
+		{"country alias", validElement(""), validElement(`,"location":{"city":"Austin","state":"TX","country":"United States"}`), true},
+		{"padded date", validElement(""), validElement(`,"posting_date":" 2023-10-03 "`), true},
+		{"salary edit", validElement(""), validElement(`,"salary":{"value":150000,"currency":"USD"}`), true},
+		{"different city", validElement(""), validElement(`,"location":"Boston, MA, USA"`), false},
+		{"different date", validElement(""), validElement(`,"posting_date":"2023-10-04"`), false},
+		{"unknown countries", validElement(`,"location":"Austin, TX, Narnia"`), validElement(`,"location":"Austin, TX, Atlantis"`), false},
+		{"invalid dates", validElement(`,"posting_date":"not-a-date"`), validElement(`,"posting_date":"2023-13-01"`), false},
+		{"unknown country string vs object", validElement(`,"location":"Austin, TX, Narnia"`), validElement(`,"location":{"city":"Austin","state":"TX","country":"Narnia"}`), true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := newFakeSaver()
+			got, err := runFeed(t, feed(tt.a, tt.b), s, nil)
+			if err != nil {
+				t.Fatalf("Run() error = %v", err)
+			}
+			if same := got.Duplicate == 1; same != tt.wantSame {
+				t.Errorf("same key = %v, want %v (summary %+v)", same, tt.wantSame, got)
+			}
+		})
+	}
+}
 
-	if _, err := runFeed(t, input, s, nil); err != nil {
+func TestRunDuplicateKeyFirstWins(t *testing.T) {
+	s := newFakeSaver()
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	input := feed(validElement(""), validElement(`,"salary":{"value":150000,"currency":"USD"}`))
+
+	got, err := runFeed(t, input, s, log)
+	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
-	if s.records[0].IdempotencyKey == "" {
-		t.Fatal("IdempotencyKey is empty")
+	if want := (ingestion.Summary{Approved: 1, Duplicate: 1}); got != want {
+		t.Errorf("Run() = %+v, want %+v", got, want)
 	}
-	if s.records[0].IdempotencyKey != s.records[1].IdempotencyKey {
-		t.Errorf("same input gave different keys %q, %q", s.records[0].IdempotencyKey, s.records[1].IdempotencyKey)
+	if len(s.records) != 1 || s.records[0].SalaryAmount.String() != "145000" {
+		t.Fatalf("saved records = %+v, want only the first element", s.records)
 	}
-	if s.records[0].IdempotencyKey == s.records[2].IdempotencyKey {
-		t.Error("different location gave the same key")
+	line := findLogLine(t, &buf, "job.duplicate_key")
+	if line["level"] != "WARN" || line["index"] != float64(1) || line["first_index"] != float64(0) {
+		t.Errorf("job.duplicate_key line = %v", line)
 	}
 }
 

@@ -46,6 +46,7 @@ func main() {
 		"unchanged", sum.Unchanged,
 		"quarantined", sum.Quarantined,
 		"invalid", sum.Invalid,
+		"duplicate", sum.Duplicate,
 	)
 	if err != nil {
 		slog.Error("ingest failed", "error", err)

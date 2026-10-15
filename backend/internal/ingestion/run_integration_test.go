@@ -121,3 +121,32 @@ func TestRunPoisonAgainstPostgres(t *testing.T) {
 		t.Errorf("stored raw = %q, want input element", gotRaw)
 	}
 }
+
+func TestRunDuplicateKeyAgainstPostgres(t *testing.T) {
+	store, conn, ctx := openDB(t)
+	input := feed(
+		validElement(`,"title":"Dup Key"`),
+		validElement(`,"title":"Dup Key","salary":{"value":150000,"currency":"USD"}`),
+	)
+	before := outboxCount(t, ctx, conn)
+
+	first := runInto(t, ctx, store, input)
+	second := runInto(t, ctx, store, input)
+
+	if want := (ingestion.Summary{Approved: 1, Duplicate: 1}); first != want {
+		t.Errorf("first Run() = %+v, want %+v", first, want)
+	}
+	if want := (ingestion.Summary{Unchanged: 1, Duplicate: 1}); second != want {
+		t.Errorf("second Run() = %+v, want %+v", second, want)
+	}
+	if got := outboxCount(t, ctx, conn) - before; got != 1 {
+		t.Errorf("outbox rows added = %d, want 1", got)
+	}
+	var salary string
+	if err := conn.QueryRow(ctx, "SELECT salary_amount::text FROM postings WHERE title = 'Dup Key'").Scan(&salary); err != nil {
+		t.Fatalf("read Dup Key row: %v", err)
+	}
+	if salary != "145000.00" {
+		t.Errorf("salary_amount = %s, want 145000.00 (first element)", salary)
+	}
+}
