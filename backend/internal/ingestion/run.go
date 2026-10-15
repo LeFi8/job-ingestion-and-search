@@ -136,8 +136,8 @@ func salaryUSD(d approval.Decision) *decimal.Decimal {
 		annual := d.Job.AnnualUSD()
 		return &annual
 	case d.FX != nil:
-		amount := d.FX.AmountUSD
-		return &amount
+		annual := d.FX.AnnualUSD
+		return &annual
 	default:
 		return nil
 	}

@@ -14,6 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/shopspring/decimal"
+
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/approval"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/fx"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion"
@@ -349,4 +351,32 @@ func findLogLine(t *testing.T, buf *bytes.Buffer, msg string) map[string]any {
 	}
 	t.Fatalf("no %q log line in %s", msg, buf.String())
 	return nil
+}
+
+func TestRunSalaryUSDAnnual(t *testing.T) {
+	tests := []struct {
+		name       string
+		overrides  string
+		wantStatus string
+		want       string
+	}{
+		{"rejected hourly", `,"title":"Low Hourly","salary":{"value":25,"currency":"USD","unit":"hourly"}`, "rejected", "52000"},
+		{"rejected annual", `,"title":"Low Annual","salary":{"value":30000,"currency":"USD","unit":"annual"}`, "rejected", "30000"},
+		{"approved hourly", `,"title":"High Hourly","salary":{"value":80,"currency":"USD","unit":"hourly"}`, "approved", "166400"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := newFakeSaver()
+			if _, err := runFeed(t, feed(validElement(tt.overrides)), s, nil); err != nil {
+				t.Fatalf("Run() error = %v", err)
+			}
+			rec := s.records[0]
+			if rec.Status != tt.wantStatus {
+				t.Fatalf("status = %s, want %s", rec.Status, tt.wantStatus)
+			}
+			if rec.SalaryUSDAnnual == nil || !rec.SalaryUSDAnnual.Equal(decimal.RequireFromString(tt.want)) {
+				t.Errorf("SalaryUSDAnnual = %v, want %s", rec.SalaryUSDAnnual, tt.want)
+			}
+		})
+	}
 }

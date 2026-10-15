@@ -119,6 +119,7 @@ func (e *Engine) Evaluate(p posting.Posting, issues []posting.Issue) Decision {
 				}
 				annualUSD = usd
 			}
+			fxApplied.AnnualUSD = annualUSD
 		}
 	}
 
