@@ -255,4 +255,16 @@ func TestQuarantine(t *testing.T) {
 	if gotErr != q.Err.Error() {
 		t.Errorf("error = %q, want %q", gotErr, q.Err.Error())
 	}
+
+	if err := testStore.Quarantine(ctx, "test-feed", q); err != nil {
+		t.Fatalf("second Quarantine() error = %v", err)
+	}
+	moved := q
+	moved.Index = 7
+	if err := testStore.Quarantine(ctx, "test-feed", moved); err != nil {
+		t.Fatalf("moved Quarantine() error = %v", err)
+	}
+	if got := countRows(t, ctx, "quarantine"); got != 1 {
+		t.Errorf("quarantine rows = %d, want 1", got)
+	}
 }

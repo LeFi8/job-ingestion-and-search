@@ -47,11 +47,11 @@ CREATE TABLE quarantine (
   source_id     text NOT NULL,
   element_index int NOT NULL,
   raw           bytea NOT NULL,
+  raw_hash      bytea GENERATED ALWAYS AS (sha256(raw)) STORED,
   error         text NOT NULL,
-  created_at    timestamptz NOT NULL DEFAULT now()
+  created_at    timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (source_id, raw_hash)
 );
-
-CREATE INDEX idx_quarantine_source_id ON quarantine (source_id);
 
 -- +goose Down
 DROP TABLE quarantine;

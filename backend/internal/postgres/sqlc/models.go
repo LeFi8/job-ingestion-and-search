@@ -53,6 +53,7 @@ type Quarantine struct {
 	SourceID     string             `json:"source_id"`
 	ElementIndex int32              `json:"element_index"`
 	Raw          []byte             `json:"raw"`
+	RawHash      []byte             `json:"raw_hash"`
 	Error        string             `json:"error"`
 	CreatedAt    pgtype.Timestamptz `json:"created_at"`
 }

@@ -18,6 +18,7 @@ INSERT INTO quarantine (
 ) VALUES (
   $1, $2, $3, $4
 )
+ON CONFLICT (source_id, raw_hash) DO NOTHING
 `
 
 type InsertQuarantineParams struct {
