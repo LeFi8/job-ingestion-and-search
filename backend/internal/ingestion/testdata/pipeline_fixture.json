@@ -1,0 +1,94 @@
+[
+  {
+    "title": "Backend Engineer",
+    "description": "Join our backend team to build scalable services in Go.",
+    "company": "NextGen Systems",
+    "location": {
+      "city": "Austin",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 145000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-03",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Machine Learning Engineer",
+    "description": "Rejoignez notre équipe pour concevoir des modèles de machine learning avancés.",
+    "company": "DeepData Labs",
+    "location": {
+      "city": "Montreal",
+      "state": "QC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 120000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-11",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Staff Cloud Architect",
+    "description": "Lead architecture across distributed cloud platforms.",
+    "company": "Global Enterprises",
+    "location": {
+      "city": "London",
+      "country": "UK"
+    },
+    "salary": {
+      "value": 85000,
+      "currency": "GBP"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-12",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Frontend Developer Intern",
+    "description": "Looking for an intern to assist in frontend development.",
+    "company": "BrightStart Talent",
+    "location": {
+      "city": "Vancouver",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 20000,
+      "currency": "CAD"
+    },
+    "employment_type": "Internship",
+    "posting_date": "2023-10-06",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Mobile Engineer",
+    "description": "Entwickeln Sie mobile Anwendungen für iOS und Android.",
+    "company": "AppForge",
+    "location": {
+      "city": "Berlin",
+      "country": "Germany"
+    },
+    "salary": {
+      "value": 70000,
+      "currency": "EUR"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2023-10-18",
+    "company_type": "Direct Employer",
+    "language": "German",
+    "remote": false
+  }
+]

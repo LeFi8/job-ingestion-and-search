@@ -30,6 +30,7 @@ type Reason struct {
 type FXApplied struct {
 	Rate      decimal.Decimal
 	AmountUSD decimal.Decimal
+	AnnualUSD decimal.Decimal
 	Inferred  bool
 }
 
