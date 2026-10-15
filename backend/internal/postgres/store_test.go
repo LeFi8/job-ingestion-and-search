@@ -5,23 +5,17 @@ package postgres
 import (
 	"bytes"
 	"context"
-	"database/sql"
 	"errors"
-	"fmt"
 	"log/slog"
 	"os"
 	"testing"
 	"time"
 
 	"cloud.google.com/go/civil"
-	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
-	"github.com/testcontainers/testcontainers-go"
-	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
-	"github.com/lefi8/job-ingestion-and-search/backend/migrations"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/pgtest"
 )
 
 var testStore *Store
@@ -33,23 +27,11 @@ func TestMain(m *testing.M) {
 func runSuite(m *testing.M) int {
 	ctx := context.Background()
 
-	container, err := tcpostgres.Run(ctx, "postgres:18.4", tcpostgres.BasicWaitStrategies())
+	url, stop, err := pgtest.Start(ctx)
 	if err != nil {
-		return fail("start postgres container", err)
+		return fail("start test database", err)
 	}
-	defer func() {
-		if err := testcontainers.TerminateContainer(container); err != nil {
-			slog.Error("terminate postgres container", "error", err)
-		}
-	}()
-
-	url, err := container.ConnectionString(ctx, "sslmode=disable")
-	if err != nil {
-		return fail("container connection string", err)
-	}
-	if err := migrate(ctx, url); err != nil {
-		return fail("migrate test database", err)
-	}
+	defer stop()
 
 	testStore, err = Open(ctx, url)
 	if err != nil {
@@ -63,23 +45,6 @@ func runSuite(m *testing.M) int {
 func fail(msg string, err error) int {
 	slog.Error(msg, "error", err)
 	return 1
-}
-
-func migrate(ctx context.Context, url string) error {
-	db, err := sql.Open("pgx", url)
-	if err != nil {
-		return fmt.Errorf("open db: %w", err)
-	}
-	defer func() { _ = db.Close() }()
-
-	if err := goose.SetDialect("postgres"); err != nil {
-		return fmt.Errorf("set dialect: %w", err)
-	}
-	goose.SetBaseFS(migrations.FS)
-	if err := goose.UpContext(ctx, db, "."); err != nil {
-		return fmt.Errorf("goose up: %w", err)
-	}
-	return nil
 }
 
 func testContext(t *testing.T) context.Context {
