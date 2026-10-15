@@ -130,7 +130,7 @@ SET
   policy_version    = EXCLUDED.policy_version,
   decided_at        = EXCLUDED.decided_at
 WHERE postings.content_hash IS DISTINCT FROM EXCLUDED.content_hash
-RETURNING id, (xmax = 0) AS inserted
+RETURNING id
 `
 
 type UpsertPostingParams struct {
@@ -158,12 +158,7 @@ type UpsertPostingParams struct {
 	DecidedAt        pgtype.Timestamptz `json:"decided_at"`
 }
 
-type UpsertPostingRow struct {
-	ID       uuid.UUID `json:"id"`
-	Inserted bool      `json:"inserted"`
-}
-
-func (q *Queries) UpsertPosting(ctx context.Context, arg UpsertPostingParams) (UpsertPostingRow, error) {
+func (q *Queries) UpsertPosting(ctx context.Context, arg UpsertPostingParams) (uuid.UUID, error) {
 	row := q.db.QueryRow(ctx, upsertPosting,
 		arg.SourceID,
 		arg.IdempotencyKey,
@@ -188,7 +183,7 @@ func (q *Queries) UpsertPosting(ctx context.Context, arg UpsertPostingParams) (U
 		arg.PolicyVersion,
 		arg.DecidedAt,
 	)
-	var i UpsertPostingRow
-	err := row.Scan(&i.ID, &i.Inserted)
-	return i, err
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
 }

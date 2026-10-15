@@ -51,7 +51,7 @@ SET
   policy_version    = EXCLUDED.policy_version,
   decided_at        = EXCLUDED.decided_at
 WHERE postings.content_hash IS DISTINCT FROM EXCLUDED.content_hash
-RETURNING id, (xmax = 0) AS inserted;
+RETURNING id;
 
 -- name: EnqueueAll :execrows
 INSERT INTO outbox (posting_id)
