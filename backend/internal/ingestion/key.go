@@ -11,7 +11,9 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 )
 
-// keyVersion is incremented when the idempotency key generation logic changes in a way that would cause previously generated keys to be different.
+// keyVersion changes every key, and so does any change to normalization the key
+// reads (country aliases, US states, date parsing); either one duplicates
+// stored postings unless existing rows are re-keyed in the same change.
 const keyVersion = "k1"
 
 // idempotencyKey uses normalized values where normalization succeeded and the
