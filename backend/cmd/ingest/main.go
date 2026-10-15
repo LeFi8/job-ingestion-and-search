@@ -39,7 +39,7 @@ func main() {
 	}
 
 	sum, err := run(context.Background(), dbURL, path, sourceID)
-	slog.Info("ingest summary",
+	counts := []any{
 		"source", sourceID,
 		"approved", sum.Approved,
 		"rejected", sum.Rejected,
@@ -47,11 +47,12 @@ func main() {
 		"quarantined", sum.Quarantined,
 		"invalid", sum.Invalid,
 		"duplicate", sum.Duplicate,
-	)
+	}
 	if err != nil {
-		slog.Error("ingest failed", "error", err)
+		slog.Error("ingest failed", append(counts, "error", err)...)
 		os.Exit(1)
 	}
+	slog.Info("ingest summary", counts...)
 	if sum.Invalid > 0 {
 		slog.Error("ingest finished with refused rows", "invalid", sum.Invalid)
 		os.Exit(1)
