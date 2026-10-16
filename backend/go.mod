@@ -10,6 +10,7 @@ tool (
 
 require (
 	cloud.google.com/go v0.123.0
+	github.com/elastic/go-elasticsearch/v9 v9.5.2
 	github.com/google/uuid v1.6.0
 	github.com/jackc/pgx-shopspring-decimal v0.0.0-20220624020537-1d36b5a1853e
 	github.com/jackc/pgx/v5 v5.10.0
@@ -17,6 +18,7 @@ require (
 	github.com/pressly/goose/v3 v3.28.0
 	github.com/shopspring/decimal v1.4.0
 	github.com/testcontainers/testcontainers-go v0.44.0
+	github.com/testcontainers/testcontainers-go/modules/elasticsearch v0.44.0
 	github.com/testcontainers/testcontainers-go/modules/postgres v0.44.0
 )
 
@@ -51,6 +53,7 @@ require (
 	github.com/dprotaso/go-yit v0.0.0-20220510233725-9ba8df137936 // indirect
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/ebitengine/purego v0.10.1 // indirect
+	github.com/elastic/elastic-transport-go/v8 v8.9.0 // indirect
 	github.com/elastic/go-sysinfo v1.15.5 // indirect
 	github.com/elastic/go-windows v1.0.2 // indirect
 	github.com/fatih/structtag v1.2.0 // indirect
