@@ -16,9 +16,8 @@ import (
 )
 
 func main() {
-	var env config.Env
-	dbURL := env.DatabaseURL()
-	if err := env.Err(); err != nil {
+	cfg, err := config.LoadMigrate()
+	if err != nil {
 		slog.Error("invalid config", "error", err)
 		os.Exit(1)
 	}
@@ -26,7 +25,7 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	if err := run(ctx, dbURL); err != nil {
+	if err := run(ctx, cfg.DatabaseURL); err != nil {
 		slog.Error("migration failed", "error", err)
 		os.Exit(1)
 	}

@@ -180,6 +180,42 @@ func TestEnvJoinsRangeErrorsWithMissingKeys(t *testing.T) {
 	}
 }
 
+func TestLoadWorker(t *testing.T) {
+	keys := []string{"DATABASE_URL", "ELASTICSEARCH_URL", "WORKER_BATCH_SIZE", "WORKER_POLL_INTERVAL"}
+
+	t.Run("reads every key", func(t *testing.T) {
+		t.Setenv("DATABASE_URL", "postgres://db")
+		t.Setenv("ELASTICSEARCH_URL", "http://es")
+		t.Setenv("WORKER_BATCH_SIZE", "500")
+		t.Setenv("WORKER_POLL_INTERVAL", "1s")
+		got, err := LoadWorker()
+		want := Worker{DatabaseURL: "postgres://db", ElasticsearchURL: "http://es", BatchSize: 500, PollInterval: time.Second}
+		if err != nil || got != want {
+			t.Errorf("LoadWorker() = %+v, %v; want %+v, nil", got, err, want)
+		}
+	})
+
+	t.Run("reports every missing key", func(t *testing.T) {
+		unsetForTest(t, keys...)
+		_, err := LoadWorker()
+		for _, key := range keys {
+			if err == nil || !strings.Contains(err.Error(), key) {
+				t.Errorf("LoadWorker() error = %v, want it to mention %s", err, key)
+			}
+		}
+	})
+
+	t.Run("rejects a batch size above the maximum", func(t *testing.T) {
+		t.Setenv("DATABASE_URL", "postgres://db")
+		t.Setenv("ELASTICSEARCH_URL", "http://es")
+		t.Setenv("WORKER_BATCH_SIZE", strconv.Itoa(MaxWorkerBatchSize+1))
+		t.Setenv("WORKER_POLL_INTERVAL", "1s")
+		if _, err := LoadWorker(); err == nil || !strings.Contains(err.Error(), "WORKER_BATCH_SIZE") {
+			t.Errorf("LoadWorker() error = %v, want WORKER_BATCH_SIZE out of range", err)
+		}
+	})
+}
+
 func mustAtoi(t *testing.T, s string) int {
 	t.Helper()
 	n, err := strconv.Atoi(s)

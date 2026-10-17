@@ -81,10 +81,6 @@ func (e *Env) Duration(key string) time.Duration {
 	return value
 }
 
-func (e *Env) DatabaseURL() string {
-	return e.String("DATABASE_URL")
-}
-
 func (e *Env) Err() error {
 	return errors.Join(e.errs...)
 }

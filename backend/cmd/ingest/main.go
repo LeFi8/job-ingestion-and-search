@@ -22,17 +22,24 @@ func main() {
 	source := flag.String("source", "", "source id (defaults to the file base name)")
 	reindex := flag.Bool("reindex", false, "enqueue every posting for indexing instead of ingesting a file")
 	flag.Parse()
-	if *reindex {
-		if flag.NArg() != 0 {
-			slog.Error("usage: ingest --reindex")
-			os.Exit(2)
-		}
-		reindexAll()
-		return
+	if *reindex && flag.NArg() != 0 {
+		slog.Error("usage: ingest --reindex")
+		os.Exit(2)
 	}
-	if flag.NArg() != 1 {
+	if !*reindex && flag.NArg() != 1 {
 		slog.Error("usage: ingest [--source=<id>] <file> | ingest --reindex")
 		os.Exit(2)
+	}
+
+	cfg, err := config.LoadIngest()
+	if err != nil {
+		slog.Error("invalid config", "error", err)
+		os.Exit(1)
+	}
+
+	if *reindex {
+		reindexAll(cfg.DatabaseURL)
+		return
 	}
 	path := flag.Arg(0)
 	sourceID := *source
@@ -40,14 +47,7 @@ func main() {
 		sourceID = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	}
 
-	var env config.Env
-	dbURL := env.DatabaseURL()
-	if err := env.Err(); err != nil {
-		slog.Error("invalid config", "error", err)
-		os.Exit(1)
-	}
-
-	sum, err := run(context.Background(), dbURL, path, sourceID)
+	sum, err := run(context.Background(), cfg.DatabaseURL, path, sourceID)
 	counts := []any{
 		"source", sourceID,
 		"approved", sum.Approved,
@@ -68,14 +68,7 @@ func main() {
 	}
 }
 
-func reindexAll() {
-	var env config.Env
-	dbURL := env.DatabaseURL()
-	if err := env.Err(); err != nil {
-		slog.Error("invalid config", "error", err)
-		os.Exit(1)
-	}
-
+func reindexAll(dbURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
 	store, err := postgres.Open(ctx, dbURL)

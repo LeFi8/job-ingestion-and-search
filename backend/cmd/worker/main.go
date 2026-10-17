@@ -18,22 +18,17 @@ import (
 const (
 	purgeInterval = time.Hour
 	purgeAge      = 7 * 24 * time.Hour
-	maxBatchSize  = 10000
 )
 
 func main() {
-	var env config.Env
-	dbURL := env.DatabaseURL()
-	esURL := env.String("ELASTICSEARCH_URL")
-	batch := env.IntBetween("WORKER_BATCH_SIZE", 1, maxBatchSize)
-	poll := env.PositiveDuration("WORKER_POLL_INTERVAL")
-	if err := env.Err(); err != nil {
+	cfg, err := config.LoadWorker()
+	if err != nil {
 		slog.Error("invalid config", "error", err)
 		os.Exit(1)
 	}
 
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	err := run(ctx, dbURL, esURL, batch, poll)
+	err = run(ctx, cfg)
 	stop()
 	if err != nil {
 		slog.Error("worker failed", "error", err)
@@ -42,18 +37,18 @@ func main() {
 	slog.Info("worker stopped")
 }
 
-func run(ctx context.Context, dbURL, esURL string, batch int, poll time.Duration) error {
+func run(ctx context.Context, cfg config.Worker) error {
 	log := slog.Default()
 
 	connectCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	store, err := postgres.Open(connectCtx, dbURL)
+	store, err := postgres.Open(connectCtx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)
 	}
 	defer store.Close()
 
-	es, err := search.New(esURL)
+	es, err := search.New(cfg.ElasticsearchURL)
 	if err != nil {
 		return err
 	}
@@ -63,7 +58,7 @@ func run(ctx context.Context, dbURL, esURL string, batch int, poll time.Duration
 
 	go purgeLoop(ctx, store, log)
 
-	relay := &outbox.Relay{Store: store, Index: es, Batch: batch, Poll: poll, Log: log}
+	relay := &outbox.Relay{Store: store, Index: es, Batch: cfg.BatchSize, Poll: cfg.PollInterval, Log: log}
 	return relay.Run(ctx)
 }
 
