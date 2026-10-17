@@ -14,6 +14,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/sqlc"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
 )
 
 type PostingRecord struct {
@@ -73,12 +74,12 @@ func upsertParams(r PostingRecord) sqlc.UpsertPostingParams {
 		Normalized:       r.Normalized,
 		Title:            r.Title,
 		Company:          r.Company,
-		City:             nullIfEmpty(r.City),
-		Country:          nullIfEmpty(r.Country),
+		City:             ptr.NilIfZero(r.City),
+		Country:          ptr.NilIfZero(r.Country),
 		Remote:           r.Remote,
 		SalaryAmount:     r.SalaryAmount,
-		SalaryCurrency:   nullIfEmpty(r.SalaryCurrency),
-		SalaryUnit:       nullIfEmpty(r.SalaryUnit),
+		SalaryCurrency:   ptr.NilIfZero(r.SalaryCurrency),
+		SalaryUnit:       ptr.NilIfZero(r.SalaryUnit),
 		SalaryUsdAnnual:  r.SalaryUSDAnnual,
 		CurrencyInferred: r.CurrencyInferred,
 		FxRate:           r.FxRate,
@@ -96,11 +97,4 @@ func contentHash(r PostingRecord) string {
 	h.Write(r.Raw)
 	h.Write([]byte(r.PolicyVersion))
 	return hex.EncodeToString(h.Sum(nil))
-}
-
-func nullIfEmpty(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
 }
