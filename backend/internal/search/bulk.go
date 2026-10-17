@@ -61,6 +61,9 @@ func (c *Client) Bulk(ctx context.Context, actions []Action) ([]ItemResult, erro
 			if r.Status == http.StatusTooManyRequests {
 				return nil, fmt.Errorf("bulk item %d: elasticsearch overloaded (429)", i)
 			}
+			if r.Status >= http.StatusInternalServerError {
+				return nil, fmt.Errorf("bulk item %d: elasticsearch unavailable (%d)", i, r.Status)
+			}
 			if r.Error != nil && r.Error.Type == "index_not_found_exception" {
 				return nil, fmt.Errorf("bulk item %d: alias %s is missing: %s", i, aliasName, r.Error.Type)
 			}

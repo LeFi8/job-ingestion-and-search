@@ -40,6 +40,13 @@ func TestBulkResponseErrors(t *testing.T) {
 		}
 	})
 
+	t.Run("503 item fails the call", func(t *testing.T) {
+		c := bulkServer(t, `{"errors":true,"items":[`+ok+`,{"index":{"_index":"jobs_v1","_id":"b","status":503,"error":{"type":"unavailable_shards_exception","reason":"shard unavailable"}}}]}`)
+		if _, err := c.Bulk(context.Background(), twoActions()); err == nil {
+			t.Error("Bulk() error = nil, want error for a 5xx item")
+		}
+	})
+
 	t.Run("fewer items than actions fails the call", func(t *testing.T) {
 		c := bulkServer(t, `{"errors":false,"items":[`+ok+`]}`)
 		if _, err := c.Bulk(context.Background(), twoActions()); err == nil {
