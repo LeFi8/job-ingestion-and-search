@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -115,4 +116,75 @@ func TestEnvRejectsEmptyValues(t *testing.T) {
 			}
 		}
 	}
+}
+
+func TestEnvBoundedIntRejectsOutOfRange(t *testing.T) {
+	tests := []struct {
+		value string
+		valid bool
+	}{
+		{"1", true},
+		{"10000", true},
+		{"0", false},
+		{"-5", false},
+		{"10001", false},
+		{"4294967297", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.value, func(t *testing.T) {
+			t.Setenv(keyA, tt.value)
+			var env Env
+			got := env.IntBetween(keyA, 1, 10000)
+			err := env.Err()
+			if tt.valid && (err != nil || got != mustAtoi(t, tt.value)) {
+				t.Errorf("Err() = %v, want nil", err)
+			}
+			if !tt.valid && (err == nil || !strings.Contains(err.Error(), keyA)) {
+				t.Errorf("Err() = %v, want error naming %s", err, keyA)
+			}
+		})
+	}
+}
+
+func TestEnvPositiveDurationRejectsNonPositive(t *testing.T) {
+	for _, value := range []string{"0s", "-1s"} {
+		t.Run(value, func(t *testing.T) {
+			t.Setenv(keyB, value)
+			var env Env
+			env.PositiveDuration(keyB)
+			if err := env.Err(); err == nil || !strings.Contains(err.Error(), keyB) {
+				t.Errorf("Err() = %v, want error naming %s", err, keyB)
+			}
+		})
+	}
+	t.Setenv(keyB, "250ms")
+	var env Env
+	if got := env.PositiveDuration(keyB); got != 250*time.Millisecond || env.Err() != nil {
+		t.Errorf("PositiveDuration() = %v, %v; want 250ms, nil", got, env.Err())
+	}
+}
+
+func TestEnvJoinsRangeErrorsWithMissingKeys(t *testing.T) {
+	unsetForTest(t, keyA)
+	t.Setenv(keyB, "0")
+	t.Setenv(keyC, "0s")
+	var env Env
+	env.String(keyA)
+	env.IntBetween(keyB, 1, 10)
+	env.PositiveDuration(keyC)
+	err := env.Err()
+	for _, want := range []string{keyA, keyB, keyC} {
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("Err() = %v, want it to contain %s", err, want)
+		}
+	}
+}
+
+func mustAtoi(t *testing.T, s string) int {
+	t.Helper()
+	n, err := strconv.Atoi(s)
+	if err != nil {
+		t.Fatalf("Atoi(%q): %v", s, err)
+	}
+	return n
 }

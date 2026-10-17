@@ -42,6 +42,32 @@ func (e *Env) Int(key string) int {
 	return value
 }
 
+func (e *Env) IntBetween(key string, lo, hi int) int {
+	before := len(e.errs)
+	value := e.Int(key)
+	if len(e.errs) > before {
+		return 0
+	}
+	if value < lo || value > hi {
+		e.errs = append(e.errs, fmt.Errorf("%s: %d is outside %d..%d", key, value, lo, hi))
+		return 0
+	}
+	return value
+}
+
+func (e *Env) PositiveDuration(key string) time.Duration {
+	before := len(e.errs)
+	value := e.Duration(key)
+	if len(e.errs) > before {
+		return 0
+	}
+	if value <= 0 {
+		e.errs = append(e.errs, fmt.Errorf("%s: %s is not positive", key, value))
+		return 0
+	}
+	return value
+}
+
 func (e *Env) Duration(key string) time.Duration {
 	raw, ok := e.lookup(key)
 	if !ok {
