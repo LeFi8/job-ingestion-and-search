@@ -20,9 +20,18 @@ import (
 
 func main() {
 	source := flag.String("source", "", "source id (defaults to the file base name)")
+	reindex := flag.Bool("reindex", false, "enqueue every posting for indexing instead of ingesting a file")
 	flag.Parse()
+	if *reindex {
+		if flag.NArg() != 0 {
+			slog.Error("usage: ingest --reindex")
+			os.Exit(2)
+		}
+		reindexAll()
+		return
+	}
 	if flag.NArg() != 1 {
-		slog.Error("usage: ingest [--source=<id>] <file>")
+		slog.Error("usage: ingest [--source=<id>] <file> | ingest --reindex")
 		os.Exit(2)
 	}
 	path := flag.Arg(0)
@@ -57,6 +66,31 @@ func main() {
 		slog.Error("ingest finished with refused rows", "invalid", sum.Invalid)
 		os.Exit(1)
 	}
+}
+
+func reindexAll() {
+	var env config.Env
+	dbURL := env.DatabaseURL()
+	if err := env.Err(); err != nil {
+		slog.Error("invalid config", "error", err)
+		os.Exit(1)
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+	defer cancel()
+	store, err := postgres.Open(ctx, dbURL)
+	if err != nil {
+		slog.Error("reindex failed", "error", fmt.Errorf("open store: %w", err))
+		os.Exit(1)
+	}
+	defer store.Close()
+
+	n, err := store.EnqueueAll(ctx)
+	if err != nil {
+		slog.Error("reindex failed", "error", err)
+		os.Exit(1)
+	}
+	slog.Info("reindex enqueued", "enqueued", n)
 }
 
 func run(ctx context.Context, dbURL, path, sourceID string) (ingestion.Summary, error) {

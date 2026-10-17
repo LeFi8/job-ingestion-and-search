@@ -14,7 +14,10 @@ SELECT
   p.remote,
   COALESCE(round(p.salary_usd_annual), 0)::bigint AS salary_usd_annual,
   p.currency_inferred,
-  p.posted_on
+  p.posted_on,
+  p.salary_amount,
+  p.salary_currency,
+  p.salary_unit
 FROM outbox o
 JOIN postings p ON p.id = o.posting_id
 WHERE o.processed_at IS NULL AND o.failed_at IS NULL
@@ -27,13 +30,14 @@ UPDATE outbox
 SET processed_at = now()
 WHERE id = ANY($1::bigint[]);
 
--- name: MarkFailed :exec
+-- name: MarkFailed :one
 UPDATE outbox
 SET
   attempts = attempts + 1,
   last_error = $2,
   failed_at = CASE WHEN attempts + 1 >= 5 THEN now() ELSE NULL END
-WHERE id = $1;
+WHERE id = $1
+RETURNING (failed_at IS NOT NULL)::boolean AS dead_lettered;
 
 -- name: PurgeProcessed :execrows
 DELETE FROM outbox

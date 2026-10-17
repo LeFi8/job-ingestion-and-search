@@ -11,6 +11,7 @@ import (
 	"cloud.google.com/go/civil"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
+	"github.com/shopspring/decimal"
 )
 
 const claimOutbox = `-- name: ClaimOutbox :many
@@ -25,7 +26,10 @@ SELECT
   p.remote,
   COALESCE(round(p.salary_usd_annual), 0)::bigint AS salary_usd_annual,
   p.currency_inferred,
-  p.posted_on
+  p.posted_on,
+  p.salary_amount,
+  p.salary_currency,
+  p.salary_unit
 FROM outbox o
 JOIN postings p ON p.id = o.posting_id
 WHERE o.processed_at IS NULL AND o.failed_at IS NULL
@@ -35,17 +39,20 @@ FOR UPDATE OF o SKIP LOCKED
 `
 
 type ClaimOutboxRow struct {
-	OutboxID         int64       `json:"outbox_id"`
-	PostingID        uuid.UUID   `json:"posting_id"`
-	Status           string      `json:"status"`
-	Title            string      `json:"title"`
-	Company          string      `json:"company"`
-	City             *string     `json:"city"`
-	Country          *string     `json:"country"`
-	Remote           bool        `json:"remote"`
-	SalaryUsdAnnual  int64       `json:"salary_usd_annual"`
-	CurrencyInferred bool        `json:"currency_inferred"`
-	PostedOn         *civil.Date `json:"posted_on"`
+	OutboxID         int64            `json:"outbox_id"`
+	PostingID        uuid.UUID        `json:"posting_id"`
+	Status           string           `json:"status"`
+	Title            string           `json:"title"`
+	Company          string           `json:"company"`
+	City             *string          `json:"city"`
+	Country          *string          `json:"country"`
+	Remote           bool             `json:"remote"`
+	SalaryUsdAnnual  int64            `json:"salary_usd_annual"`
+	CurrencyInferred bool             `json:"currency_inferred"`
+	PostedOn         *civil.Date      `json:"posted_on"`
+	SalaryAmount     *decimal.Decimal `json:"salary_amount"`
+	SalaryCurrency   *string          `json:"salary_currency"`
+	SalaryUnit       *string          `json:"salary_unit"`
 }
 
 func (q *Queries) ClaimOutbox(ctx context.Context, limit int32) ([]ClaimOutboxRow, error) {
@@ -69,6 +76,9 @@ func (q *Queries) ClaimOutbox(ctx context.Context, limit int32) ([]ClaimOutboxRo
 			&i.SalaryUsdAnnual,
 			&i.CurrencyInferred,
 			&i.PostedOn,
+			&i.SalaryAmount,
+			&i.SalaryCurrency,
+			&i.SalaryUnit,
 		); err != nil {
 			return nil, err
 		}
@@ -90,13 +100,14 @@ func (q *Queries) InsertOutbox(ctx context.Context, postingID uuid.UUID) error {
 	return err
 }
 
-const markFailed = `-- name: MarkFailed :exec
+const markFailed = `-- name: MarkFailed :one
 UPDATE outbox
 SET
   attempts = attempts + 1,
   last_error = $2,
   failed_at = CASE WHEN attempts + 1 >= 5 THEN now() ELSE NULL END
 WHERE id = $1
+RETURNING (failed_at IS NOT NULL)::boolean AS dead_lettered
 `
 
 type MarkFailedParams struct {
@@ -104,9 +115,11 @@ type MarkFailedParams struct {
 	LastError *string `json:"last_error"`
 }
 
-func (q *Queries) MarkFailed(ctx context.Context, arg MarkFailedParams) error {
-	_, err := q.db.Exec(ctx, markFailed, arg.ID, arg.LastError)
-	return err
+func (q *Queries) MarkFailed(ctx context.Context, arg MarkFailedParams) (bool, error) {
+	row := q.db.QueryRow(ctx, markFailed, arg.ID, arg.LastError)
+	var dead_lettered bool
+	err := row.Scan(&dead_lettered)
+	return dead_lettered, err
 }
 
 const markProcessed = `-- name: MarkProcessed :exec
