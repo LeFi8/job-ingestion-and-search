@@ -1,0 +1,6 @@
+package: httpapi
+generate:
+  gin-server: true
+  models: true
+  embedded-spec: true
+output: openapi.gen.go
