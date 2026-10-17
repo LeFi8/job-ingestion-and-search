@@ -27,56 +27,6 @@ func (q *Queries) EnqueueAll(ctx context.Context) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
-const getPostingsByIDs = `-- name: GetPostingsByIDs :many
-SELECT id, source_id, idempotency_key, content_hash, raw, normalized, title, company, city, country, remote, salary_amount, salary_currency, salary_unit, salary_usd_annual, currency_inferred, fx_rate, posted_on, status, reasons, market, policy_version, decided_at, ingested_at FROM postings
-WHERE id = ANY($1::uuid[])
-`
-
-func (q *Queries) GetPostingsByIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]Posting, error) {
-	rows, err := q.db.Query(ctx, getPostingsByIDs, dollar_1)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	var items []Posting
-	for rows.Next() {
-		var i Posting
-		if err := rows.Scan(
-			&i.ID,
-			&i.SourceID,
-			&i.IdempotencyKey,
-			&i.ContentHash,
-			&i.Raw,
-			&i.Normalized,
-			&i.Title,
-			&i.Company,
-			&i.City,
-			&i.Country,
-			&i.Remote,
-			&i.SalaryAmount,
-			&i.SalaryCurrency,
-			&i.SalaryUnit,
-			&i.SalaryUsdAnnual,
-			&i.CurrencyInferred,
-			&i.FxRate,
-			&i.PostedOn,
-			&i.Status,
-			&i.Reasons,
-			&i.Market,
-			&i.PolicyVersion,
-			&i.DecidedAt,
-			&i.IngestedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const upsertPosting = `-- name: UpsertPosting :one
 INSERT INTO postings (
   source_id,

@@ -56,7 +56,3 @@ RETURNING id;
 -- name: EnqueueAll :execrows
 INSERT INTO outbox (posting_id)
 SELECT id FROM postings;
-
--- name: GetPostingsByIDs :many
-SELECT * FROM postings
-WHERE id = ANY($1::uuid[]);

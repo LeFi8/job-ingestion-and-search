@@ -1,0 +1,93 @@
+{
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 0,
+    "gc_deletes": "10m",
+    "analysis": {
+      "char_filter": {
+        "cpp": {
+          "type": "pattern_replace",
+          "pattern": "(?i)c\\+\\+",
+          "replacement": "cplusplus"
+        },
+        "csharp": {
+          "type": "pattern_replace",
+          "pattern": "(?i)c#",
+          "replacement": "csharp"
+        },
+        "dotnet": {
+          "type": "pattern_replace",
+          "pattern": "(?i)\\.net\\b",
+          "replacement": " dotnet"
+        }
+      },
+      "analyzer": {
+        "title": {
+          "type": "custom",
+          "char_filter": [
+            "cpp",
+            "csharp",
+            "dotnet"
+          ],
+          "tokenizer": "standard",
+          "filter": [
+            "lowercase",
+            "asciifolding"
+          ]
+        }
+      }
+    }
+  },
+  "mappings": {
+    "dynamic": "strict",
+    "properties": {
+      "job_id": {
+        "type": "keyword"
+      },
+      "title": {
+        "type": "text",
+        "analyzer": "title",
+        "fields": {
+          "sayt": {
+            "type": "search_as_you_type",
+            "analyzer": "title"
+          },
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "company": {
+        "type": "text",
+        "fields": {
+          "keyword": {
+            "type": "keyword"
+          }
+        }
+      },
+      "country": {
+        "type": "keyword"
+      },
+      "city": {
+        "type": "keyword"
+      },
+      "remote": {
+        "type": "boolean"
+      },
+      "salary_usd_annual": {
+        "type": "long"
+      },
+      "salary_display": {
+        "type": "keyword",
+        "index": false
+      },
+      "currency_inferred": {
+        "type": "boolean"
+      },
+      "posted_on": {
+        "type": "date",
+        "format": "strict_date"
+      }
+    }
+  }
+}
