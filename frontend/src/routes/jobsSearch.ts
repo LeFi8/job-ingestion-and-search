@@ -14,17 +14,19 @@ export function pageCount(total: number, perPage: number): number {
   return Math.min(Math.ceil(total / perPage), maxPage)
 }
 
-export const jobsSearchSchema = z.object({
-  q: z.string().max(200).catch('').default(''),
-  country: z
-    .string()
-    .regex(/^[A-Z]{2}$/)
-    .optional()
-    .catch(undefined),
-  sort: z.enum(sortValues).optional().catch(undefined),
-  page: z.coerce.number().int().min(1).max(maxPage).catch(1).default(1),
-  job: z.uuid().optional().catch(undefined),
-})
+export const jobsSearchSchema = z
+  .object({
+    q: z.string().max(200).catch('').default(''),
+    country: z
+      .string()
+      .regex(/^[A-Z]{2}$/)
+      .optional()
+      .catch(undefined),
+    sort: z.enum(sortValues).optional().catch(undefined),
+    page: z.coerce.number().int().min(1).max(maxPage).catch(1).default(1),
+    job: z.uuid().optional().catch(undefined),
+  })
+  .transform((s) => (s.sort === 'relevance' && !s.q.trim() ? { ...s, sort: undefined } : s))
 
 export type JobsSearch = z.infer<typeof jobsSearchSchema>
 

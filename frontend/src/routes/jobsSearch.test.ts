@@ -14,6 +14,9 @@ describe('jobsSearchSchema', () => {
     ['?page=abc', { q: '', page: 1 }],
     ['?page=201', { q: '', page: 1 }],
     [`?q=${'a'.repeat(201)}`, { q: '', page: 1 }],
+    ['?sort=relevance', { q: '', page: 1 }],
+    ['?q=%20&sort=relevance', { q: ' ', page: 1 }],
+    ['?q=eng&sort=relevance', { q: 'eng', sort: 'relevance', page: 1 }],
     [
       `?q=eng&country=CA&sort=salary_desc&page=3&job=${jobId}`,
       { q: 'eng', country: 'CA', sort: 'salary_desc', page: 3, job: jobId },
