@@ -10,10 +10,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 const (
@@ -27,7 +27,7 @@ type JobSearcher interface {
 }
 
 type JobReader interface {
-	ApprovedJob(ctx context.Context, id uuid.UUID) (postgres.Job, error)
+	ApprovedJob(ctx context.Context, id uuid.UUID) (storage.Job, error)
 }
 
 type handler struct {
@@ -78,7 +78,7 @@ func (h handler) GetJob(c *gin.Context, id uuid.UUID) {
 	ctx, cancel := context.WithTimeout(c.Request.Context(), h.timeout)
 	defer cancel()
 	job, err := h.jobs.ApprovedJob(ctx, id)
-	if errors.Is(err, postgres.ErrNotFound) {
+	if errors.Is(err, storage.ErrNotFound) {
 		writeProblem(c, http.StatusNotFound, "Job not found.")
 		return
 	}
@@ -100,7 +100,7 @@ func (h handler) GetJob(c *gin.Context, id uuid.UUID) {
 	c.JSON(http.StatusOK, detail)
 }
 
-func toJobDetail(job postgres.Job) (JobDetail, error) {
+func toJobDetail(job storage.Job) (JobDetail, error) {
 	display, err := posting.SalaryDisplay(job.SalaryAmount, job.SalaryCurrency, posting.PayUnit(job.SalaryUnit))
 	if err != nil {
 		return JobDetail{}, fmt.Errorf("posting %s: %w", job.PostingID, err)

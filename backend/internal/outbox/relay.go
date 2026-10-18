@@ -6,9 +6,9 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 const (
@@ -18,7 +18,7 @@ const (
 )
 
 type Store interface {
-	WithClaim(ctx context.Context, limit int, fn func([]postgres.ClaimedPosting) (failed map[int64]string, err error)) (deadLettered []int64, err error)
+	WithClaim(ctx context.Context, limit int, fn func([]storage.ClaimedPosting) (failed map[int64]string, err error)) (deadLettered []int64, err error)
 	PurgeProcessed(ctx context.Context, olderThan time.Duration) (int64, error)
 }
 
@@ -97,7 +97,7 @@ func (r *Relay) cycle(ctx context.Context) (batchCounts, error) {
 
 	var counts batchCounts
 	var failedErrors map[int64]string
-	deadLettered, err := r.Store.WithClaim(cycleCtx, r.Batch, func(rows []postgres.ClaimedPosting) (map[int64]string, error) {
+	deadLettered, err := r.Store.WithClaim(cycleCtx, r.Batch, func(rows []storage.ClaimedPosting) (map[int64]string, error) {
 		counts.claimed = len(rows)
 		if len(rows) == 0 {
 			return nil, nil
@@ -122,7 +122,7 @@ func (r *Relay) cycle(ctx context.Context) (batchCounts, error) {
 	return counts, nil
 }
 
-func (r *Relay) relay(ctx context.Context, rows []postgres.ClaimedPosting, counts *batchCounts) (map[int64]string, error) {
+func (r *Relay) relay(ctx context.Context, rows []storage.ClaimedPosting, counts *batchCounts) (map[int64]string, error) {
 	failed := map[int64]string{}
 	actions := make([]search.Action, 0, len(rows))
 	ids := make([]int64, 0, len(rows))
@@ -168,7 +168,7 @@ func (r *Relay) logBatch(c batchCounts, err error) {
 	r.Log.Info("outbox.batch", attrs...)
 }
 
-func buildAction(row postgres.ClaimedPosting) (search.Action, error) {
+func buildAction(row storage.ClaimedPosting) (search.Action, error) {
 	if row.Status != statusApproved {
 		return search.Action{Version: row.OutboxID, JobID: row.PostingID}, nil
 	}

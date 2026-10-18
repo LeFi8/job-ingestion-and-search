@@ -17,8 +17,8 @@ import (
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/config"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/httpapi"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 const (
@@ -65,7 +65,7 @@ func run(ctx context.Context, cfg config.API) error {
 
 	connectCtx, cancel := context.WithTimeout(ctx, connectTimeout)
 	defer cancel()
-	store, err := postgres.Open(connectCtx, cfg.DatabaseURL)
+	store, err := storage.Open(connectCtx, cfg.DatabaseURL)
 	if err != nil {
 		return fmt.Errorf("open store: %w", err)
 	}

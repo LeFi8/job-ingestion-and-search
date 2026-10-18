@@ -1,6 +1,6 @@
 //go:build integration
 
-package postgres
+package storage
 
 import (
 	"bytes"
@@ -17,8 +17,8 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/pgtest"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage/pgtest"
 )
 
 var testStore *Store

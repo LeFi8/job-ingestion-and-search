@@ -20,15 +20,15 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/fx"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 type fakeSaver struct {
-	records     []postgres.PostingRecord
+	records     []storage.PostingRecord
 	quarantined []raw.Quarantined
 	seen        map[string]bool
-	saveErr     func(r postgres.PostingRecord) error
+	saveErr     func(r storage.PostingRecord) error
 	calls       int
 }
 
@@ -36,7 +36,7 @@ func newFakeSaver() *fakeSaver {
 	return &fakeSaver{seen: map[string]bool{}}
 }
 
-func (f *fakeSaver) SaveOutcome(_ context.Context, r postgres.PostingRecord) (bool, error) {
+func (f *fakeSaver) SaveOutcome(_ context.Context, r storage.PostingRecord) (bool, error) {
 	f.calls++
 	if f.saveErr != nil {
 		if err := f.saveErr(r); err != nil {
@@ -223,9 +223,9 @@ func TestRunPoisonRecords(t *testing.T) {
 
 func TestRunInvalidRowContinues(t *testing.T) {
 	s := newFakeSaver()
-	s.saveErr = func(r postgres.PostingRecord) error {
+	s.saveErr = func(r storage.PostingRecord) error {
 		if r.Title == "Bad Row" {
-			return fmt.Errorf("upsert posting: %w", postgres.ErrInvalid)
+			return fmt.Errorf("upsert posting: %w", storage.ErrInvalid)
 		}
 		return nil
 	}
@@ -249,7 +249,7 @@ func TestRunInvalidRowContinues(t *testing.T) {
 func TestRunSaveErrorAborts(t *testing.T) {
 	boom := errors.New("connection lost")
 	s := newFakeSaver()
-	s.saveErr = func(r postgres.PostingRecord) error {
+	s.saveErr = func(r storage.PostingRecord) error {
 		if r.Title == "Second" {
 			return boom
 		}

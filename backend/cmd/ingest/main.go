@@ -15,7 +15,7 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/fx"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/langdetect"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 func main() {
@@ -71,7 +71,7 @@ func main() {
 func reindexAll(dbURL string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
 	defer cancel()
-	store, err := postgres.Open(ctx, dbURL)
+	store, err := storage.Open(ctx, dbURL)
 	if err != nil {
 		slog.Error("reindex failed", "error", fmt.Errorf("open store: %w", err))
 		os.Exit(1)
@@ -95,7 +95,7 @@ func run(ctx context.Context, dbURL, path, sourceID string) (ingestion.Summary, 
 
 	connectCtx, cancel := context.WithTimeout(ctx, 30*time.Second)
 	defer cancel()
-	store, err := postgres.Open(connectCtx, dbURL)
+	store, err := storage.Open(connectCtx, dbURL)
 	if err != nil {
 		return ingestion.Summary{}, fmt.Errorf("open store: %w", err)
 	}

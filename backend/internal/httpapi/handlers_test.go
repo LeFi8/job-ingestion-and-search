@@ -17,9 +17,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 const testSearchTimeout = 50 * time.Millisecond
@@ -45,11 +45,11 @@ func (f *fakeSearcher) Search(ctx context.Context, q search.Query) (search.Page,
 type fakeJobReader struct {
 	called bool
 	gotID  uuid.UUID
-	job    postgres.Job
+	job    storage.Job
 	err    error
 }
 
-func (f *fakeJobReader) ApprovedJob(_ context.Context, id uuid.UUID) (postgres.Job, error) {
+func (f *fakeJobReader) ApprovedJob(_ context.Context, id uuid.UUID) (storage.Job, error) {
 	f.called = true
 	f.gotID = id
 	return f.job, f.err
@@ -142,21 +142,21 @@ func TestGetJob(t *testing.T) {
 	id := uuid.MustParse("0f8fad5b-d9cb-469f-a165-70867728950e")
 	amount := decimal.RequireFromString("62.5")
 	postedOn := civil.Date{Year: 2026, Month: 3, Day: 14}
-	full := postgres.Job{
+	full := storage.Job{
 		PostingID: id.String(), Title: "Backend Engineer", Company: "Acme",
 		City: "Austin", Region: "TX", Country: "US", Remote: true,
 		SalaryUSDAnnual: 130000, CurrencyInferred: true, PostedOn: &postedOn,
 		SalaryAmount: &amount, SalaryCurrency: "CAD", SalaryUnit: "hourly",
 		Description: "Build services in Go.", CompanyType: "direct_employer",
 	}
-	minimal := postgres.Job{
+	minimal := storage.Job{
 		PostingID: id.String(), Title: "Backend Engineer", Company: "Acme",
 		Description: "Build services in Go.", CompanyType: "unknown",
 	}
 
 	tests := []struct {
 		name   string
-		job    postgres.Job
+		job    storage.Job
 		err    error
 		status int
 		want   string
@@ -172,9 +172,9 @@ func TestGetJob(t *testing.T) {
 			"remote": false, "salary_display": "", "salary_usd_annual": 0, "currency_inferred": false,
 			"description": "Build services in Go.", "company_type": "unknown"
 		}`},
-		{"invalid company type", postgres.Job{PostingID: id.String(), CompanyType: ""}, nil, http.StatusInternalServerError, ""},
-		{"not found", postgres.Job{}, postgres.ErrNotFound, http.StatusNotFound, ""},
-		{"other error", postgres.Job{}, errors.New("dial tcp pg-internal:5432: connection refused"), http.StatusServiceUnavailable, ""},
+		{"invalid company type", storage.Job{PostingID: id.String(), CompanyType: ""}, nil, http.StatusInternalServerError, ""},
+		{"not found", storage.Job{}, storage.ErrNotFound, http.StatusNotFound, ""},
+		{"other error", storage.Job{}, errors.New("dial tcp pg-internal:5432: connection refused"), http.StatusServiceUnavailable, ""},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

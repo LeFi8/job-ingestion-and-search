@@ -14,8 +14,8 @@ import (
 	"github.com/jackc/pgx/v5"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/pgtest"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage/pgtest"
 )
 
 var testURL string
@@ -35,12 +35,12 @@ func runSuite(m *testing.M) int {
 	return m.Run()
 }
 
-func openDB(t *testing.T) (*postgres.Store, *pgx.Conn, context.Context) {
+func openDB(t *testing.T) (*storage.Store, *pgx.Conn, context.Context) {
 	t.Helper()
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	t.Cleanup(cancel)
 
-	store, err := postgres.Open(ctx, testURL)
+	store, err := storage.Open(ctx, testURL)
 	if err != nil {
 		t.Fatalf("Open() error = %v", err)
 	}
@@ -55,7 +55,7 @@ func openDB(t *testing.T) (*postgres.Store, *pgx.Conn, context.Context) {
 	return store, conn, ctx
 }
 
-func runInto(t *testing.T, ctx context.Context, store *postgres.Store, input string) ingestion.Summary {
+func runInto(t *testing.T, ctx context.Context, store *storage.Store, input string) ingestion.Summary {
 	t.Helper()
 	log := slog.New(slog.NewJSONHandler(&bytes.Buffer{}, nil))
 	sum, err := ingestion.Run(ctx, strings.NewReader(input), "test-feed", testDecidedAt, testEngine(), store, log)

@@ -1,4 +1,4 @@
-package postgres
+package storage
 
 import (
 	"context"
@@ -13,8 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/shopspring/decimal"
 
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/sqlc"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage/sqlc"
 )
 
 type PostingRecord struct {
