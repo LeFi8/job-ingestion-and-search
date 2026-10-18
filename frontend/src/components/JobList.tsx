@@ -13,7 +13,7 @@ export function JobList({
   isFetching: boolean
 }) {
   return (
-    <div aria-busy={isFetching}>
+    <div aria-busy={isFetching} className={isFetching ? 'opacity-60 transition-opacity' : ''}>
       <p aria-live="polite" className="px-4 py-2 text-sm text-gray-600">
         {page ? `${String(page.total)} ${page.total === 1 ? 'job' : 'jobs'}` : ''}
       </p>

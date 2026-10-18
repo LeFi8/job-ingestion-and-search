@@ -142,6 +142,66 @@ test('selecting a job loads its details by id, even when it is not in the list',
   expect(await within(jobDetail()).findByText('Monitor security events.')).toBeInTheDocument()
 })
 
+test('an empty result names the search and clearing filters restores the list', async () => {
+  installApi()
+  server.use(
+    http.get('/api/jobs', ({ request }) =>
+      new URL(request.url).searchParams.get('q') === 'zzz'
+        ? HttpResponse.json({ ...listPage, items: [], total: 0, facets: { country: [] } })
+        : undefined,
+    ),
+  )
+  const user = userEvent.setup()
+  const { history } = await renderApp('/?q=zzz&country=CA')
+
+  expect(await within(jobList()).findByText("No jobs match 'zzz' in Canada")).toBeInTheDocument()
+  expect(jobDetail()).toBeEmptyDOMElement()
+
+  await user.click(within(jobList()).getByRole('button', { name: 'Clear filters' }))
+  await waitFor(() => {
+    expect(history.location.search).toBe('')
+  })
+  expect(
+    await within(jobList()).findByRole('link', { name: /Project Manager/ }),
+  ).toBeInTheDocument()
+})
+
+test('a client error is shown once, without retries, and Retry refetches', async () => {
+  server.use(
+    http.get('/api/jobs', () =>
+      HttpResponse.json(
+        { title: 'Bad Request', status: 400, detail: 'page must be at most 200.' },
+        { status: 400, headers: { 'Content-Type': 'application/problem+json' } },
+      ),
+    ),
+  )
+  const user = userEvent.setup()
+  await renderApp('/?page=150')
+
+  expect(await within(jobList()).findByText('page must be at most 200.')).toBeInTheDocument()
+  expect(jobsRequests()).toHaveLength(1)
+
+  installApi()
+  await user.click(within(jobList()).getByRole('button', { name: 'Retry' }))
+  expect(
+    await within(jobList()).findByRole('link', { name: /Project Manager/ }),
+  ).toBeInTheDocument()
+})
+
+test('a job that no longer exists says so and links back to the results', async () => {
+  installApi()
+  const user = userEvent.setup()
+  const { urlParams } = await renderApp('/?job=00000000-0000-4000-8000-000000000000')
+
+  expect(
+    await within(jobDetail()).findByText('This job is no longer available.'),
+  ).toBeInTheDocument()
+  await user.click(within(jobDetail()).getByRole('link', { name: /Back to results/ }))
+  await waitFor(() => {
+    expect(urlParams().has('job')).toBe(false)
+  })
+})
+
 test('special characters reach the API intact', async () => {
   installApi()
   const user = userEvent.setup()

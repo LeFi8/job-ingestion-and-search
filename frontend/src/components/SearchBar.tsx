@@ -1,11 +1,11 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { useState } from 'react'
 import type { JobsPage } from '../api/client'
+import { formatCountry } from '../lib/format'
 import { useDebouncedCallback } from '../lib/useDebouncedCallback'
 import { sortValues } from '../routes/jobsSearch'
 
 const route = getRouteApi('/')
-const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
 
 const sortLabels: Record<(typeof sortValues)[number], string> = {
   relevance: 'Relevance',
@@ -82,7 +82,7 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
           <option value="">All countries</option>
           {facets.map((f) => (
             <option key={f.value} value={f.value}>
-              {`${regionNames.of(f.value) ?? f.value} (${String(f.count)})`}
+              {`${formatCountry(f.value)} (${String(f.count)})`}
             </option>
           ))}
         </select>

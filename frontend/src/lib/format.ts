@@ -4,6 +4,8 @@ const usd = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 0,
 })
 
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
 const postedOn = new Intl.DateTimeFormat('en-US', {
   month: 'short',
   day: 'numeric',
@@ -24,4 +26,8 @@ export function formatLocation(parts: (string | undefined)[], remote: boolean): 
 export function formatPostedOn(d?: string): string {
   if (d === undefined) return 'Date not provided'
   return postedOn.format(new Date(d))
+}
+
+export function formatCountry(code: string): string {
+  return regionNames.of(code) ?? code
 }
