@@ -1,5 +1,6 @@
 [tools]
 go = "1.27.2"
+node = "24.22.0"
 
 [env]
 _.file = ".env"
@@ -37,3 +38,10 @@ run = "go run ./cmd/api"
 [tasks.worker]
 dir = "backend"
 run = "go run ./cmd/worker"
+
+[tasks.web]
+dir = "frontend"
+run = "npm run dev"
+
+[tasks.dev]
+depends = ["api", "worker", "web"]
