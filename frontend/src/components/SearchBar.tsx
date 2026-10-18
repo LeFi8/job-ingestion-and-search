@@ -44,6 +44,10 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
   }
 
   const hasQuery = search.q.trim() !== ''
+  const countries =
+    search.country && !facets.some((f) => f.value === search.country)
+      ? [...facets, { value: search.country, count: 0 }]
+      : facets
   const sortOptions = hasQuery ? sortValues : sortValues.filter((s) => s !== 'relevance')
 
   return (
@@ -80,7 +84,7 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
           className="rounded border border-gray-300 px-3 py-2"
         >
           <option value="">All countries</option>
-          {facets.map((f) => (
+          {countries.map((f) => (
             <option key={f.value} value={f.value}>
               {`${formatCountry(f.value)} (${String(f.count)})`}
             </option>

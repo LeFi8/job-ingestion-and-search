@@ -156,6 +156,7 @@ test('an empty result names the search and clearing filters restores the list', 
 
   expect(await within(jobList()).findByText("No jobs match 'zzz' in Canada")).toBeInTheDocument()
   expect(jobDetail()).toBeEmptyDOMElement()
+  expect(screen.getByRole('combobox', { name: 'Country' })).toHaveDisplayValue('Canada (0)')
 
   await user.click(within(jobList()).getByRole('button', { name: 'Clear filters' }))
   await waitFor(() => {
