@@ -12,8 +12,9 @@ import (
 )
 
 const (
-	defaultPage    = 1
-	defaultPerPage = 20
+	defaultPage               = 1
+	defaultPerPage            = 20
+	statusClientClosedRequest = 499
 )
 
 type JobSearcher interface {
@@ -37,6 +38,10 @@ func (h handler) GetJobs(c *gin.Context, params GetJobsParams) {
 	defer cancel()
 	page, err := h.searcher.Search(ctx, query)
 	if err != nil {
+		if c.Request.Context().Err() != nil {
+			c.AbortWithStatus(statusClientClosedRequest)
+			return
+		}
 		_ = c.Error(err)
 		writeProblem(c, http.StatusServiceUnavailable, "Search is temporarily unavailable. Try again later.")
 		return

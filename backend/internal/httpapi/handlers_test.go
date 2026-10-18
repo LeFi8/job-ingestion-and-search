@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -36,9 +37,9 @@ func (f *fakeSearcher) Search(ctx context.Context, q search.Query) (search.Page,
 	return f.page, f.err
 }
 
-func newTestRouter(t *testing.T, s JobSearcher) http.Handler {
+func newTestRouter(t *testing.T, s JobSearcher, log *slog.Logger) http.Handler {
 	t.Helper()
-	router, err := NewRouter(s, testSearchTimeout, slog.New(slog.DiscardHandler))
+	router, err := NewRouter(s, testSearchTimeout, log)
 	if err != nil {
 		t.Fatalf("NewRouter() error = %v", err)
 	}
@@ -48,7 +49,7 @@ func newTestRouter(t *testing.T, s JobSearcher) http.Handler {
 func serve(t *testing.T, s JobSearcher, target string) *httptest.ResponseRecorder {
 	t.Helper()
 	rec := httptest.NewRecorder()
-	newTestRouter(t, s).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
+	newTestRouter(t, s, slog.New(slog.DiscardHandler)).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
 	return rec
 }
 
@@ -145,7 +146,7 @@ func TestGetJobsSearchErrorIs503WithoutLeak(t *testing.T) {
 }
 
 func TestGetJobsSearchTimeoutIs503(t *testing.T) {
-	router := newTestRouter(t, &fakeSearcher{block: true})
+	router := newTestRouter(t, &fakeSearcher{block: true}, slog.New(slog.DiscardHandler))
 	done := make(chan *httptest.ResponseRecorder, 1)
 	go func() {
 		rec := httptest.NewRecorder()
@@ -158,6 +159,23 @@ func TestGetJobsSearchTimeoutIs503(t *testing.T) {
 		decodeProblem(t, rec, http.StatusServiceUnavailable)
 	case <-time.After(2 * time.Second):
 		t.Fatal("no response 2s after the request; the search call has no deadline")
+	}
+}
+
+func TestGetJobsClientCancelIsNotLoggedAsError(t *testing.T) {
+	var logs bytes.Buffer
+	router := newTestRouter(t, &fakeSearcher{block: true}, slog.New(slog.NewTextHandler(&logs, nil)))
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, httptest.NewRequestWithContext(ctx, http.MethodGet, "/api/jobs", nil))
+
+	if rec.Code != 499 {
+		t.Errorf("status = %d, want 499 (client closed request)", rec.Code)
+	}
+	if strings.Contains(logs.String(), "level=ERROR") || !strings.Contains(logs.String(), "status=499") {
+		t.Errorf("access log = %q, want a non-error line with status=499", logs.String())
 	}
 }
 
