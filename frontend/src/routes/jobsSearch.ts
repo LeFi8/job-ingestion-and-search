@@ -1,6 +1,12 @@
 import { z } from 'zod'
 
-export const sortValues = ['relevance', 'salary_desc', 'salary_asc', 'date_desc', 'date_asc'] as const
+export const sortValues = [
+  'relevance',
+  'salary_desc',
+  'salary_asc',
+  'date_desc',
+  'date_asc',
+] as const
 
 export const jobsSearchSchema = z.object({
   q: z.string().max(200).catch('').default(''),
