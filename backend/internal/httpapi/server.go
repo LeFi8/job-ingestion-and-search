@@ -23,7 +23,10 @@ func NewRouter(s JobSearcher, searchTimeout time.Duration, log *slog.Logger) (*g
 	if err := r.SetTrustedProxies(nil); err != nil {
 		return nil, fmt.Errorf("set trusted proxies: %w", err)
 	}
+	r.HandleMethodNotAllowed = true
 	r.Use(accessLog(log), gin.CustomRecoveryWithWriter(io.Discard, recoverWithProblem))
+	r.NoRoute(func(c *gin.Context) { writeProblem(c, http.StatusNotFound, "") })
+	r.NoMethod(func(c *gin.Context) { writeProblem(c, http.StatusMethodNotAllowed, "") })
 	r.GET("/healthz", func(c *gin.Context) { c.Status(http.StatusOK) })
 
 	validator, err := validateRequest(spec)

@@ -179,6 +179,28 @@ func TestGetJobsClientCancelIsNotLoggedAsError(t *testing.T) {
 	}
 }
 
+func TestUnknownRoutesAndMethodsUseProblem(t *testing.T) {
+	tests := []struct {
+		method, target string
+		status         int
+		allow          string
+	}{
+		{http.MethodGet, "/api/job", http.StatusNotFound, ""},
+		{http.MethodPost, "/api/jobs", http.StatusMethodNotAllowed, "GET"},
+	}
+	router := newTestRouter(t, &fakeSearcher{}, slog.New(slog.DiscardHandler))
+	for _, tt := range tests {
+		t.Run(tt.method+" "+tt.target, func(t *testing.T) {
+			rec := httptest.NewRecorder()
+			router.ServeHTTP(rec, httptest.NewRequest(tt.method, tt.target, nil))
+			decodeProblem(t, rec, tt.status)
+			if got := rec.Header().Get("Allow"); got != tt.allow {
+				t.Errorf("Allow = %q, want %q", got, tt.allow)
+			}
+		})
+	}
+}
+
 func assertJSON(t *testing.T, rec *httptest.ResponseRecorder, want string) {
 	t.Helper()
 	if rec.Code != http.StatusOK {
