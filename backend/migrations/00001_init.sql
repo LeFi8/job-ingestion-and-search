@@ -1,3 +1,4 @@
+-- squawk-ignore-file require-lock-timeout, require-statement-timeout, ban-drop-table, prefer-bigint-over-int
 -- +goose Up
 CREATE TABLE postings (
   id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -1,0 +1,86 @@
+name: backend
+
+on:
+  push:
+    paths:
+      - backend/**
+      - api/**
+      - compose.yaml
+      - redocly.yaml
+      - .github/workflows/backend.yml
+  pull_request:
+    paths:
+      - backend/**
+      - api/**
+      - compose.yaml
+      - redocly.yaml
+      - .github/workflows/backend.yml
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - run: go test ./...
+
+  integration:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - run: go test -tags integration ./...
+
+  lint:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - uses: golangci/golangci-lint-action@v9.3.0
+        with:
+          version: v2.14.0
+          install-mode: goinstall
+          working-directory: backend
+
+  image:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - run: cp .env.example .env && docker compose --profile all config --quiet
+        working-directory: .
+      - run: docker build .
+
+  checks:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version-file: backend/go.mod
+          cache-dependency-path: backend/go.sum
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version: 22
+      - name: generated code is current
+        run: go generate ./... && git diff --exit-code && test -z "$(git status --porcelain)"
+      - run: go tool sqlc vet
+      - run: go tool sqlc diff
+      - run: npm exec --yes --package=squawk-cli@2.66.0 -- squawk migrations/*.sql
+      - run: npm exec --yes --package=@redocly/cli@2.57.0 -- redocly lint api/openapi.yaml
+        working-directory: .

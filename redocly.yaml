@@ -1,0 +1,5 @@
+extends:
+  - recommended
+rules:
+  # Same-origin API; a servers URL would also make the embedded-spec request validator match on host.
+  no-empty-servers: off

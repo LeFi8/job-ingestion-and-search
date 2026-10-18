@@ -1,3 +1,10 @@
+x-backend: &backend
+  build: ./backend
+  image: job-ingestion-and-search-backend
+  profiles: [all]
+
+x-database-url: &database-url postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
+
 services:
   postgres:
     image: postgres:18.4
@@ -28,3 +35,58 @@ services:
       interval: 10s
       timeout: 10s
       retries: 20
+
+  migrate:
+    <<: *backend
+    command: ["migrate"]
+    environment:
+      DATABASE_URL: *database-url
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  seed:
+    <<: *backend
+    command: ["ingest", "/data/sample.json"]
+    environment:
+      DATABASE_URL: *database-url
+    volumes:
+      - ./data:/data:ro
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  worker:
+    <<: *backend
+    command: ["worker"]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: *database-url
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      WORKER_BATCH_SIZE: ${WORKER_BATCH_SIZE:?set WORKER_BATCH_SIZE in .env}
+      WORKER_POLL_INTERVAL: ${WORKER_POLL_INTERVAL:?set WORKER_POLL_INTERVAL in .env}
+    depends_on:
+      seed:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
+
+  api:
+    <<: *backend
+    command: ["api"]
+    restart: unless-stopped
+    environment:
+      API_ADDR: :8080
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "api", "-healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      elasticsearch:
+        condition: service_healthy
