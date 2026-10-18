@@ -10,5 +10,9 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
   server: { proxy },
   preview: { proxy },
-  test: { environment: 'jsdom', setupFiles: ['./src/test/setup.ts'] },
+  test: {
+    environment: 'jsdom',
+    env: { TZ: 'America/New_York' },
+    setupFiles: ['./src/test/setup.ts'],
+  },
 })
