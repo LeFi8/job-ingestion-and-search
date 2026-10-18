@@ -22,6 +22,7 @@ type Worker struct {
 type API struct {
 	Addr             string
 	ElasticsearchURL string
+	DatabaseURL      string
 }
 
 func LoadAPI() (API, error) {
@@ -29,6 +30,7 @@ func LoadAPI() (API, error) {
 	cfg := API{
 		Addr:             env.String("API_ADDR"),
 		ElasticsearchURL: env.String("ELASTICSEARCH_URL"),
+		DatabaseURL:      env.String("DATABASE_URL"),
 	}
 	return cfg, env.Err()
 }

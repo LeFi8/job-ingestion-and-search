@@ -60,6 +60,32 @@ paths:
           $ref: "#/components/responses/Problem"
         "503":
           $ref: "#/components/responses/Problem"
+  /api/jobs/{id}:
+    get:
+      operationId: getJob
+      summary: Get one approved job
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        "200":
+          description: The job with its full description.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDetail"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "404":
+          $ref: "#/components/responses/Problem"
+        "500":
+          $ref: "#/components/responses/Problem"
+        "503":
+          $ref: "#/components/responses/Problem"
 components:
   responses:
     Problem:
@@ -136,6 +162,20 @@ components:
           type: string
           format: date
           x-go-type: string
+    JobDetail:
+      allOf:
+        - $ref: "#/components/schemas/JobCard"
+        - type: object
+          required: [description, company_type]
+          properties:
+            description:
+              type: string
+            region:
+              type: string
+              description: State or province, e.g. "TX"; shown together with city and country.
+            company_type:
+              type: string
+              enum: [direct_employer, consulting_agency, unknown]
     HighlightSegment:
       type: object
       required: [text, match]

@@ -78,6 +78,7 @@ services:
     environment:
       API_ADDR: :8080
       ELASTICSEARCH_URL: http://elasticsearch:9200
+      DATABASE_URL: *database-url
     ports:
       - "8080:8080"
     healthcheck:
@@ -88,5 +89,7 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
       elasticsearch:
         condition: service_healthy

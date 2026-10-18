@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
 )
 
@@ -171,9 +172,9 @@ func buildAction(row postgres.ClaimedPosting) (search.Action, error) {
 	if row.Status != statusApproved {
 		return search.Action{Version: row.OutboxID, JobID: row.PostingID}, nil
 	}
-	display, err := salaryDisplay(row)
+	display, err := posting.SalaryDisplay(row.SalaryAmount, row.SalaryCurrency, posting.PayUnit(row.SalaryUnit))
 	if err != nil {
-		return search.Action{}, err
+		return search.Action{}, fmt.Errorf("posting %s: %w", row.PostingID, err)
 	}
 	doc := &search.Doc{
 		JobID:            row.PostingID,
@@ -190,20 +191,4 @@ func buildAction(row postgres.ClaimedPosting) (search.Action, error) {
 		doc.PostedOn = row.PostedOn.String()
 	}
 	return search.Action{Version: row.OutboxID, JobID: row.PostingID, Doc: doc}, nil
-}
-
-func salaryDisplay(row postgres.ClaimedPosting) (string, error) {
-	if row.SalaryAmount == nil {
-		return "", nil
-	}
-	var per string
-	switch row.SalaryUnit {
-	case "hourly":
-		per = "hour"
-	case "annual":
-		per = "year"
-	default:
-		return "", fmt.Errorf("unsupported salary unit %q for posting %s", row.SalaryUnit, row.PostingID)
-	}
-	return row.SalaryAmount.StringFixed(2) + " " + row.SalaryCurrency + " / " + per, nil
 }

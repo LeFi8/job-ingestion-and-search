@@ -16,7 +16,29 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/gin-gonic/gin"
 	"github.com/oapi-codegen/runtime"
+	openapi_types "github.com/oapi-codegen/runtime/types"
 )
+
+// Defines values for JobDetailCompanyType.
+const (
+	ConsultingAgency JobDetailCompanyType = "consulting_agency"
+	DirectEmployer   JobDetailCompanyType = "direct_employer"
+	Unknown          JobDetailCompanyType = "unknown"
+)
+
+// Valid indicates whether the value is a known member of the JobDetailCompanyType enum.
+func (e JobDetailCompanyType) Valid() bool {
+	switch e {
+	case ConsultingAgency:
+		return true
+	case DirectEmployer:
+		return true
+	case Unknown:
+		return true
+	default:
+		return false
+	}
+}
 
 // Defines values for GetJobsParamsSort.
 const (
@@ -81,6 +103,33 @@ type JobCard struct {
 	TitleHighlight *[]HighlightSegment `json:"title_highlight,omitempty"`
 }
 
+// JobDetail defines model for JobDetail.
+type JobDetail struct {
+	City             *string              `json:"city,omitempty"`
+	Company          string               `json:"company"`
+	CompanyType      JobDetailCompanyType `json:"company_type"`
+	Country          *string              `json:"country,omitempty"`
+	CurrencyInferred bool                 `json:"currency_inferred"`
+	Description      string               `json:"description"`
+	Id               string               `json:"id"`
+	PostedOn         *string              `json:"posted_on,omitempty"`
+
+	// Region State or province, e.g. "TX"; shown together with city and country.
+	Region *string `json:"region,omitempty"`
+	Remote bool    `json:"remote"`
+
+	// SalaryDisplay The original salary, e.g. "62.50 CAD / hour".
+	SalaryDisplay   string `json:"salary_display"`
+	SalaryUsdAnnual int64  `json:"salary_usd_annual"`
+	Title           string `json:"title"`
+
+	// TitleHighlight The title split into plain-text segments; match marks the searched words.
+	TitleHighlight *[]HighlightSegment `json:"title_highlight,omitempty"`
+}
+
+// JobDetailCompanyType defines model for JobDetail.CompanyType.
+type JobDetailCompanyType string
+
 // JobsPage defines model for JobsPage.
 type JobsPage struct {
 	Facets  Facets    `json:"facets"`
@@ -121,6 +170,9 @@ type ServerInterface interface {
 	// GetJobs Search approved jobs
 	// (GET /api/jobs)
 	GetJobs(c *gin.Context, params GetJobsParams)
+	// GetJob Get one approved job
+	// (GET /api/jobs/{id})
+	GetJob(c *gin.Context, id openapi_types.UUID)
 }
 
 // ServerInterfaceWrapper converts contexts to parameters.
@@ -191,6 +243,31 @@ func (siw *ServerInterfaceWrapper) GetJobs(c *gin.Context) {
 	siw.Handler.GetJobs(c, params)
 }
 
+// GetJob operation middleware
+func (siw *ServerInterfaceWrapper) GetJob(c *gin.Context) {
+
+	var err error
+	_ = err
+
+	// ------------- Path parameter "id" -------------
+	var id openapi_types.UUID
+
+	err = runtime.BindStyledParameterWithOptions("simple", "id", c.Param("id"), &id, runtime.BindStyledParameterOptions{ParamLocation: runtime.ParamLocationPath, Explode: false, Required: true, Type: "string", Format: "uuid", ValueIsUnescaped: true})
+	if err != nil {
+		siw.ErrorHandler(c, fmt.Errorf("Invalid format for parameter id: %w", err), http.StatusBadRequest)
+		return
+	}
+
+	for _, middleware := range siw.HandlerMiddlewares {
+		middleware(c)
+		if c.IsAborted() {
+			return
+		}
+	}
+
+	siw.Handler.GetJob(c, id)
+}
+
 // GinServerOptions provides options for the Gin server.
 type GinServerOptions struct {
 	BaseURL      string
@@ -219,6 +296,7 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 	}
 
 	router.GET(options.BaseURL+"/api/jobs", wrapper.GetJobs)
+	router.GET(options.BaseURL+"/api/jobs/:id", wrapper.GetJob)
 }
 
 // Base64 encoded, compressed with deflate, json marshaled OpenAPI spec.
@@ -226,24 +304,27 @@ func RegisterHandlersWithOptions(router gin.IRouter, si ServerInterface, options
 // const string: with thousands of chunks the chained `+` fold is several
 // times slower for the Go compiler than parsing a slice literal.
 var swaggerSpec = []string{
-	"lFZdcuM2DL4Kht23yrLsbNKp9indnW3T6Ux3mj41m3oQCbaYpUiGhGJ7Mj5HD9SLdUjJf5HcJG+iCH74",
-	"AHwA+SQKU1ujSbMX+ZNw5K3RnuLiizN3iurwWRjNpDl8orVKFsjS6LFtLb6/90aHPV9UVGP4eudoLnLx",
-	"3XiPP253/XiLu9lsElGSL5y0AU7k4o/PH+HH9+c/QIcMJTFK5VMRbDuAgP8ZC4p0rDOWHMuWcmGaluXc",
-	"uBpZ5EJqvngvEsFrS+2SFuTEJhGPqBoKtt2WZyf1Ijpy9NBIR6XIbzqzpIO+3SGZu3sqOABFLv4EGbcO",
-	"n5Kp9i/lpY1ps/OAzuG6x2eLOsTkF7molFxUfE2LuqvXMacauagOgr4zRhHq6JVW/HI6olXS4Qxx+NXc",
-	"fURXDqRD8noAP4kSRH1qb5fD/l7jHOliPZN6Ti7yG4pLloOnrfFM5czoI7mUyCSSZ9aJWI0WZtSDcFQb",
-	"pmGvHhW69ayU3iqM/I+V/mdFYJxcSI0KWuMEKF2k8FVcTNPzDD5efoIxVKZxX0Xa47R30fhyhlo3qF4p",
-	"fJasaDAncWdWbVU0zDoagbdKMkjNBqxCqUdBGOBb3fkPEAUCNbpvHrgi8ISuqKiEpXGlD/G8qid6in6p",
-	"PWQpthHulbUrVa8uQ1kcUtYJpfsvuKC+1Oe7ifBiv3uxOUjFq3Ky7bBeKhJhOzr9oltys9O7bPiV8nme",
-	"7kh4C9AROPCWbHMxlMCDC+Y4f+3UH5SoZ+TGn4jihLCfj7BOHR1Un1k4IPXcRKgWMxQbrqOG4fLLlUjE",
-	"IznfNsUkzdIs+DeWNFopcnGWZulZTAdXkewYrRzfm7u4WLRXV4g43qNXpcjFz8RBUPGQw5qYnBf5Ta8D",
-	"2+6LTD4Ar60ZsVHkUHMC1tFcrgA9rE0TNimFnxTqb6CkZw+oFAQSsf0C2kNDLjSBxjoE+SCSgzu8xtVv",
-	"pBdciXyaZUk/q8+5XV3/DmeTi4vRBFDZCkdTKExJ/gM4soQMc+PA0yM5VIECrawyJYmcXUPDjLbz/5DX",
-	"rkksMpMLp/6+uRz9dfs03bwbGpQ1rq7aM9Os3zOe17HCQfqiH9QnmmOj2AMbcKToEXVBsKxIwwNID544",
-	"AcMVuaX0BOECmQWEFEI5YSm5Mg13Ix6MixbgjWNQ6PlUKYLBUdSkmzqod8fhYJiRL/YrjIsdj+13+H37",
-	"iiKGtoV//4FtC4NnXLdxSB1H+SRLsiwbOfKNYlhKXZrlqTC6IbAPo2zTKfJJrIusm7qTVy11u5oMTZ2n",
-	"Yfj9nBlwMc0OfJy/5OI2OX7+TrPsf56+b3vy7q6KgTfvJcQ0m3lszZho6GQP7fBMg0zfZ9kpLzva+6d1",
-	"Is7fbH/2BvvQN01do1uLXHRzEa115pHKGEeIdPPfAA==",
+	"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",
 }
 
 // decodeSpec returns the embedded OpenAPI spec as raw JSON bytes,

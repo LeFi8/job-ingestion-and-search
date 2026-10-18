@@ -7,7 +7,10 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
-var ErrInvalid = errors.New("invalid posting row")
+var (
+	ErrInvalid  = errors.New("invalid posting row")
+	ErrNotFound = errors.New("posting not found")
+)
 
 const sqlStateCheckViolation = "23514"
 

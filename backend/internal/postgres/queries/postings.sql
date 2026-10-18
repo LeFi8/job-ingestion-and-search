@@ -56,3 +56,23 @@ RETURNING id;
 -- name: EnqueueAll :execrows
 INSERT INTO outbox (posting_id)
 SELECT id FROM postings;
+
+-- name: GetApprovedJob :one
+SELECT
+  id AS posting_id,
+  title,
+  company,
+  city,
+  country,
+  remote,
+  COALESCE(round(salary_usd_annual), 0)::bigint AS salary_usd_annual,
+  currency_inferred,
+  posted_on,
+  salary_amount,
+  salary_currency,
+  salary_unit,
+  (normalized->>'Description')::text AS description,
+  COALESCE(normalized->'Location'->>'Region', '')::text AS region,
+  (normalized->>'CompanyType')::text AS company_type
+FROM postings
+WHERE id = $1 AND status = 'approved';

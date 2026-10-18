@@ -13,6 +13,11 @@ import (
 	"testing"
 	"time"
 
+	"cloud.google.com/go/civil"
+	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
 )
@@ -37,9 +42,27 @@ func (f *fakeSearcher) Search(ctx context.Context, q search.Query) (search.Page,
 	return f.page, f.err
 }
 
+type fakeJobReader struct {
+	called bool
+	gotID  uuid.UUID
+	job    postgres.Job
+	err    error
+}
+
+func (f *fakeJobReader) ApprovedJob(_ context.Context, id uuid.UUID) (postgres.Job, error) {
+	f.called = true
+	f.gotID = id
+	return f.job, f.err
+}
+
 func newTestRouter(t *testing.T, s JobSearcher, log *slog.Logger) http.Handler {
 	t.Helper()
-	router, err := NewRouter(s, testSearchTimeout, log)
+	return newTestRouterWithJobs(t, s, &fakeJobReader{}, log)
+}
+
+func newTestRouterWithJobs(t *testing.T, s JobSearcher, jobs JobReader, log *slog.Logger) http.Handler {
+	t.Helper()
+	router, err := NewRouter(s, jobs, testSearchTimeout, log)
 	if err != nil {
 		t.Fatalf("NewRouter() error = %v", err)
 	}
@@ -50,6 +73,13 @@ func serve(t *testing.T, s JobSearcher, target string) *httptest.ResponseRecorde
 	t.Helper()
 	rec := httptest.NewRecorder()
 	newTestRouter(t, s, slog.New(slog.DiscardHandler)).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
+	return rec
+}
+
+func serveJob(t *testing.T, jobs JobReader, target string) *httptest.ResponseRecorder {
+	t.Helper()
+	rec := httptest.NewRecorder()
+	newTestRouterWithJobs(t, &fakeSearcher{}, jobs, slog.New(slog.DiscardHandler)).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
 	return rec
 }
 
@@ -95,6 +125,71 @@ func TestGetJobsRejectsInvalidParams(t *testing.T) {
 			}
 			if fake.called {
 				t.Error("searcher was called for an invalid request")
+			}
+		})
+	}
+}
+
+func TestGetJobRejectsMalformedID(t *testing.T) {
+	fake := &fakeJobReader{}
+	decodeProblem(t, serveJob(t, fake, "/api/jobs/not-a-uuid"), http.StatusBadRequest)
+	if fake.called {
+		t.Error("reader was called for a malformed id")
+	}
+}
+
+func TestGetJob(t *testing.T) {
+	id := uuid.MustParse("0f8fad5b-d9cb-469f-a165-70867728950e")
+	amount := decimal.RequireFromString("62.5")
+	postedOn := civil.Date{Year: 2026, Month: 3, Day: 14}
+	full := postgres.Job{
+		PostingID: id.String(), Title: "Backend Engineer", Company: "Acme",
+		City: "Austin", Region: "TX", Country: "US", Remote: true,
+		SalaryUSDAnnual: 130000, CurrencyInferred: true, PostedOn: &postedOn,
+		SalaryAmount: &amount, SalaryCurrency: "CAD", SalaryUnit: "hourly",
+		Description: "Build services in Go.", CompanyType: "direct_employer",
+	}
+	minimal := postgres.Job{
+		PostingID: id.String(), Title: "Backend Engineer", Company: "Acme",
+		Description: "Build services in Go.", CompanyType: "unknown",
+	}
+
+	tests := []struct {
+		name   string
+		job    postgres.Job
+		err    error
+		status int
+		want   string
+	}{
+		{"found", full, nil, http.StatusOK, `{
+			"id": "0f8fad5b-d9cb-469f-a165-70867728950e", "title": "Backend Engineer", "company": "Acme",
+			"city": "Austin", "region": "TX", "country": "US", "remote": true,
+			"salary_display": "62.50 CAD / hour", "salary_usd_annual": 130000, "currency_inferred": true,
+			"posted_on": "2026-03-14", "description": "Build services in Go.", "company_type": "direct_employer"
+		}`},
+		{"sparse", minimal, nil, http.StatusOK, `{
+			"id": "0f8fad5b-d9cb-469f-a165-70867728950e", "title": "Backend Engineer", "company": "Acme",
+			"remote": false, "salary_display": "", "salary_usd_annual": 0, "currency_inferred": false,
+			"description": "Build services in Go.", "company_type": "unknown"
+		}`},
+		{"invalid company type", postgres.Job{PostingID: id.String(), CompanyType: ""}, nil, http.StatusInternalServerError, ""},
+		{"not found", postgres.Job{}, postgres.ErrNotFound, http.StatusNotFound, ""},
+		{"other error", postgres.Job{}, errors.New("dial tcp pg-internal:5432: connection refused"), http.StatusServiceUnavailable, ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			fake := &fakeJobReader{job: tt.job, err: tt.err}
+			rec := serveJob(t, fake, "/api/jobs/"+id.String())
+			if fake.gotID != id {
+				t.Errorf("reader got id %s, want %s", fake.gotID, id)
+			}
+			if tt.status == http.StatusOK {
+				assertJSON(t, rec, tt.want)
+				return
+			}
+			decodeProblem(t, rec, tt.status)
+			if strings.Contains(rec.Body.String(), "pg-internal") {
+				t.Errorf("body leaks the reader error: %s", rec.Body)
 			}
 		})
 	}
