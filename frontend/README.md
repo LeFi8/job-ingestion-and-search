@@ -1,32 +1,29 @@
-# React + TypeScript + Vite
+# Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React SPA for searching jobs. The URL holds all UI state (query, country, sort, page, selected job); server state is cached with TanStack Query. API types are generated from `../api/openapi.yaml`.
 
-Currently, two official plugins are available:
+Conventions and rules for the whole repo are in [`../CLAUDE.md`](../CLAUDE.md).
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Setup
 
-## React Compiler
+Node is pinned in `../mise.toml`. From the repo root:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+mise install
+mise run compose && mise run migrate && mise run seed
+mise run dev   # api + worker + Vite
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Vite proxies `/api` to `API_URL` (default `http://localhost:8080`, set in `../.env`).
+
+## Scripts
+
+| Command                           | What it does                                                 |
+| --------------------------------- | ------------------------------------------------------------ |
+| `npm run dev`                     | Vite dev server                                              |
+| `npm run build`                   | Type-check and build to `dist/`                              |
+| `npm run typecheck`               | `tsc -b`                                                     |
+| `npm run lint`                    | ESLint (type-checked rules)                                  |
+| `npm test`                        | Vitest with MSW; runs in `TZ=America/New_York`               |
+| `npm run format` / `format:check` | Prettier                                                     |
+| `npm run gen:api`                 | Regenerate `src/api/schema.d.ts` after changing the API spec |
