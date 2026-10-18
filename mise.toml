@@ -26,6 +26,10 @@ run = "go test -tags integration ./..."
 dir = "backend"
 run = "go run ./cmd/ingest ../data/sample.json"
 
+[tasks.reindex]
+dir = "backend"
+run = "go run ./cmd/ingest --reindex"
+
 [tasks.api]
 dir = "backend"
 run = "go run ./cmd/api"

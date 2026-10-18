@@ -30,6 +30,8 @@ services:
       ES_JAVA_OPTS: -Xms512m -Xmx512m
     ports:
       - "9200:9200"
+    volumes:
+      - ./volumes/elasticsearch:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fs 'localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s'"]
       interval: 10s
