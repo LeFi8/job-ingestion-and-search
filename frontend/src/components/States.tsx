@@ -82,6 +82,20 @@ export function ErrorState({ error, onRetry }: { error: Error; onRetry: () => vo
   )
 }
 
+export function PageOutOfRange({ page, lastPage }: { page: number; lastPage: number }) {
+  return (
+    <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center">
+      <p className="font-medium">{`Page ${String(page)} is past the end of the results.`}</p>
+      <Button asChild variant="outline">
+        <Link from="/" to="/" search={(prev) => ({ ...prev, page: lastPage, job: undefined })}>
+          <ChevronLeft aria-hidden="true" />
+          {`Go to page ${String(lastPage)}`}
+        </Link>
+      </Button>
+    </div>
+  )
+}
+
 export function JobGone() {
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center">

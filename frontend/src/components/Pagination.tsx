@@ -1,8 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { pageCount } from '../routes/jobsSearch'
 import { Button } from './ui/button'
-
-const maxPages = 200
 
 export function Pagination({
   page,
@@ -13,7 +12,7 @@ export function Pagination({
   total: number
   perPage: number
 }) {
-  const pages = Math.min(Math.ceil(total / perPage), maxPages)
+  const pages = pageCount(total, perPage)
   if (pages <= 1) return null
 
   return (

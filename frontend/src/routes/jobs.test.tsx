@@ -173,6 +173,31 @@ test('an empty result names the search and clearing filters restores the list', 
   ).toBeInTheDocument()
 })
 
+test('a page past the end of the results links to the last page', async () => {
+  server.use(
+    http.get('/api/jobs', ({ request }) => {
+      const page = Number(new URL(request.url).searchParams.get('page'))
+      return HttpResponse.json(
+        page > 3 ? { ...listPage, page, items: [], total: 45 } : { ...listPage, page, total: 45 },
+      )
+    }),
+    http.get('/api/jobs/:id', ({ params }) => HttpResponse.json(jobDetails[String(params.id)])),
+  )
+  const user = userEvent.setup()
+  const { urlParams } = await renderApp('/?page=9')
+
+  expect(
+    await within(jobList()).findByText('Page 9 is past the end of the results.'),
+  ).toBeInTheDocument()
+  await user.click(within(jobList()).getByRole('link', { name: /Go to page 3/ }))
+  await waitFor(() => {
+    expect(urlParams().get('page')).toBe('3')
+  })
+  expect(
+    await within(jobList()).findByRole('link', { name: /Project Manager/ }),
+  ).toBeInTheDocument()
+})
+
 test('a client error is shown once, without retries, and Retry refetches', async () => {
   server.use(
     http.get('/api/jobs', () =>

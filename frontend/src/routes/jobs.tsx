@@ -1,9 +1,17 @@
 import { getRouteApi } from '@tanstack/react-router'
-import { ApiError, useJob, useJobs } from '../api/queries'
+import { ApiError, perPage, useJob, useJobs } from '../api/queries'
 import { JobDetail } from '../components/JobDetail'
 import { JobList } from '../components/JobList'
 import { SearchBar } from '../components/SearchBar'
-import { DetailSkeleton, EmptyState, ErrorState, JobGone, ListSkeleton } from '../components/States'
+import {
+  DetailSkeleton,
+  EmptyState,
+  ErrorState,
+  JobGone,
+  ListSkeleton,
+  PageOutOfRange,
+} from '../components/States'
+import { pageCount } from './jobsSearch'
 
 const route = getRouteApi('/')
 
@@ -47,6 +55,8 @@ export function JobsPage() {
                 void navigate({ search: {} })
               }}
             />
+          ) : jobs.data.items.length === 0 ? (
+            <PageOutOfRange page={search.page} lastPage={pageCount(jobs.data.total, perPage)} />
           ) : (
             <JobList page={jobs.data} selectedId={selectedId} isFetching={jobs.isFetching} />
           )}

@@ -8,6 +8,12 @@ export const sortValues = [
   'date_asc',
 ] as const
 
+export const maxPage = 200
+
+export function pageCount(total: number, perPage: number): number {
+  return Math.min(Math.ceil(total / perPage), maxPage)
+}
+
 export const jobsSearchSchema = z.object({
   q: z.string().max(200).catch('').default(''),
   country: z
@@ -16,7 +22,7 @@ export const jobsSearchSchema = z.object({
     .optional()
     .catch(undefined),
   sort: z.enum(sortValues).optional().catch(undefined),
-  page: z.coerce.number().int().min(1).max(200).catch(1).default(1),
+  page: z.coerce.number().int().min(1).max(maxPage).catch(1).default(1),
   job: z.uuid().optional().catch(undefined),
 })
 
