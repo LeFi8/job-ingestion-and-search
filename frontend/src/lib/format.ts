@@ -17,10 +17,8 @@ export function formatUsdAnnual(n: number): string {
   return `${usd.format(n)}/yr`
 }
 
-export function formatLocation(parts: (string | undefined)[], remote: boolean): string {
-  const place = parts.filter(Boolean).join(', ')
-  if (!remote) return place
-  return place ? `${place} · Remote` : 'Remote'
+export function formatLocation(parts: (string | undefined)[]): string {
+  return parts.filter(Boolean).join(', ')
 }
 
 export function formatPostedOn(d?: string): string {

@@ -17,13 +17,18 @@ export function JobsPage() {
 
   return (
     <div className="flex h-dvh flex-col">
-      <header className="border-b border-gray-200 p-4">
-        <SearchBar facets={jobs.data?.facets.country ?? []} />
+      <header className="border-b bg-card">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
+          <span className="text-lg font-bold tracking-tight text-primary">JobSearch</span>
+          <div className="w-full min-w-0 sm:w-auto sm:flex-1">
+            <SearchBar facets={jobs.data?.facets.country ?? []} />
+          </div>
+        </div>
       </header>
-      <main className="grid min-h-0 flex-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <main className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
         <section
           aria-label="Job list"
-          className={`${showDetailOnly ? 'hidden lg:block' : ''} overflow-y-auto border-r border-gray-200`}
+          className={`${showDetailOnly ? 'hidden lg:block' : ''} min-h-0 overflow-y-auto p-4`}
         >
           {jobs.isError ? (
             <ErrorState
@@ -48,7 +53,7 @@ export function JobsPage() {
         </section>
         <section
           aria-label="Job details"
-          className={`${showDetailOnly ? '' : 'hidden lg:block'} overflow-y-auto`}
+          className={`${showDetailOnly ? '' : 'hidden lg:block'} min-h-0 overflow-y-auto p-4 lg:pl-2`}
         >
           {job.error instanceof ApiError && job.error.status === 404 ? (
             <JobGone />

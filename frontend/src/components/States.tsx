@@ -1,15 +1,22 @@
 import { Link } from '@tanstack/react-router'
+import { ChevronLeft, SearchX, TriangleAlert } from 'lucide-react'
 import { ApiError } from '../api/queries'
 import { formatCountry } from '../lib/format'
+import { Button } from './ui/button'
+import { Skeleton } from './ui/skeleton'
 
 export function ListSkeleton() {
   return (
-    <div role="status" aria-label="Loading jobs" className="animate-pulse">
-      <div className="mx-4 my-3 h-4 w-20 rounded bg-gray-200" />
+    <div role="status" aria-label="Loading jobs" className="space-y-2">
+      <Skeleton className="mx-1 mb-3 h-4 w-20" />
       {Array.from({ length: 6 }, (_, i) => (
-        <div key={i} className="space-y-2 border-b border-gray-100 px-4 py-3">
-          <div className="h-4 w-2/3 rounded bg-gray-200" />
-          <div className="h-3 w-1/2 rounded bg-gray-100" />
+        <div key={i} className="flex gap-3 rounded-xl border bg-card p-3">
+          <Skeleton className="size-10 rounded-lg" />
+          <div className="flex-1 space-y-2">
+            <Skeleton className="h-4 w-2/3" />
+            <Skeleton className="h-3 w-1/2" />
+            <Skeleton className="h-5 w-24 rounded-full" />
+          </div>
         </div>
       ))}
     </div>
@@ -18,11 +25,19 @@ export function ListSkeleton() {
 
 export function DetailSkeleton() {
   return (
-    <div role="status" aria-label="Loading job" className="animate-pulse space-y-3 p-6">
-      <div className="h-7 w-1/2 rounded bg-gray-200" />
-      <div className="h-4 w-1/3 rounded bg-gray-100" />
-      <div className="h-4 w-1/4 rounded bg-gray-100" />
-      <div className="h-32 rounded bg-gray-100" />
+    <div role="status" aria-label="Loading job" className="space-y-5 rounded-xl border bg-card p-6">
+      <div className="flex gap-4">
+        <Skeleton className="size-12 rounded-lg" />
+        <div className="flex-1 space-y-2">
+          <Skeleton className="h-7 w-1/2" />
+          <Skeleton className="h-4 w-1/3" />
+        </div>
+      </div>
+      <div className="flex gap-2">
+        <Skeleton className="h-5 w-40 rounded-full" />
+        <Skeleton className="h-5 w-28 rounded-full" />
+      </div>
+      <Skeleton className="h-32" />
     </div>
   )
 }
@@ -38,11 +53,12 @@ export function EmptyState({
 }) {
   const message = `No jobs${q ? ` match '${q}'` : ''}${country ? ` in ${formatCountry(country)}` : ''}`
   return (
-    <div className="space-y-3 p-6 text-center">
-      <p className="text-gray-700">{message}</p>
-      <button type="button" onClick={onClear} className="text-blue-700 underline">
+    <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center">
+      <SearchX className="size-8 text-muted-foreground" aria-hidden="true" />
+      <p className="font-medium">{message}</p>
+      <Button variant="outline" onClick={onClear}>
         Clear filters
-      </button>
+      </Button>
     </div>
   )
 }
@@ -50,32 +66,32 @@ export function EmptyState({
 export function ErrorState({ error, onRetry }: { error: Error; onRetry: () => void }) {
   const problem = error instanceof ApiError ? error.problem : undefined
   return (
-    <div role="alert" className="space-y-2 p-6 text-center">
+    <div
+      role="alert"
+      className="flex flex-col items-center gap-2 rounded-xl border bg-card p-8 text-center"
+    >
+      <TriangleAlert className="size-8 text-destructive" aria-hidden="true" />
       <p className="font-medium">{problem?.title ?? 'Something went wrong'}</p>
-      <p className="text-gray-700">{problem?.detail ?? 'The request failed. Please try again.'}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="rounded border border-gray-300 px-3 py-1 hover:bg-gray-50"
-      >
+      <p className="text-sm text-muted-foreground">
+        {problem?.detail ?? 'The request failed. Please try again.'}
+      </p>
+      <Button variant="outline" onClick={onRetry} className="mt-1">
         Retry
-      </button>
+      </Button>
     </div>
   )
 }
 
 export function JobGone() {
   return (
-    <div className="space-y-3 p-6">
-      <p className="text-gray-700">This job is no longer available.</p>
-      <Link
-        from="/"
-        to="/"
-        search={(prev) => ({ ...prev, job: undefined })}
-        className="text-blue-700"
-      >
-        ‹ Back to results
-      </Link>
+    <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center">
+      <p className="font-medium">This job is no longer available.</p>
+      <Button asChild variant="outline">
+        <Link from="/" to="/" search={(prev) => ({ ...prev, job: undefined })}>
+          <ChevronLeft aria-hidden="true" />
+          Back to results
+        </Link>
+      </Button>
     </div>
   )
 }

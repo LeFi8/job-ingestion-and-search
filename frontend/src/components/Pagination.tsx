@@ -1,4 +1,6 @@
 import { Link } from '@tanstack/react-router'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
+import { Button } from './ui/button'
 
 const maxPages = 200
 
@@ -15,21 +17,33 @@ export function Pagination({
   if (pages <= 1) return null
 
   return (
-    <nav aria-label="Pagination" className="flex items-center justify-between px-4 py-3 text-sm">
+    <nav aria-label="Pagination" className="flex items-center justify-between py-3 text-sm">
       {page > 1 ? (
-        <Link from="/" to="/" search={(prev) => ({ ...prev, page: page - 1 })}>
-          ‹ Prev
-        </Link>
+        <Button asChild variant="outline" size="sm">
+          <Link from="/" to="/" search={(prev) => ({ ...prev, page: page - 1 })}>
+            <ChevronLeft aria-hidden="true" />
+            Prev
+          </Link>
+        </Button>
       ) : (
-        <span className="text-gray-400">‹ Prev</span>
+        <Button variant="outline" size="sm" disabled>
+          <ChevronLeft aria-hidden="true" />
+          Prev
+        </Button>
       )}
-      <span>{`Page ${String(page)} of ${String(pages)}`}</span>
+      <span className="text-muted-foreground">{`Page ${String(page)} of ${String(pages)}`}</span>
       {page < pages ? (
-        <Link from="/" to="/" search={(prev) => ({ ...prev, page: page + 1 })}>
-          Next ›
-        </Link>
+        <Button asChild variant="outline" size="sm">
+          <Link from="/" to="/" search={(prev) => ({ ...prev, page: page + 1 })}>
+            Next
+            <ChevronRight aria-hidden="true" />
+          </Link>
+        </Button>
       ) : (
-        <span className="text-gray-400">Next ›</span>
+        <Button variant="outline" size="sm" disabled>
+          Next
+          <ChevronRight aria-hidden="true" />
+        </Button>
       )}
     </nav>
   )

@@ -14,10 +14,10 @@ export function JobList({
 }) {
   return (
     <div aria-busy={isFetching} className={isFetching ? 'opacity-60 transition-opacity' : ''}>
-      <p aria-live="polite" className="px-4 py-2 text-sm text-gray-600">
+      <p aria-live="polite" className="px-1 pb-2 text-sm text-muted-foreground">
         {page ? `${String(page.total)} ${page.total === 1 ? 'job' : 'jobs'}` : ''}
       </p>
-      <ul>
+      <ul className="space-y-2">
         {page?.items.map((job) => (
           <li key={job.id}>
             <JobListItem job={job} selected={job.id === selectedId} />
