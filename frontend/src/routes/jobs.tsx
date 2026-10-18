@@ -74,7 +74,7 @@ export function JobsPage() {
                 void job.refetch()
               }}
             />
-          ) : job.isLoading ? (
+          ) : job.isLoading || (selectedId === undefined && jobs.isPending) ? (
             <DetailSkeleton />
           ) : (
             <JobDetail job={job.data} />

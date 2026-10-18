@@ -2,7 +2,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createMemoryHistory } from '@tanstack/react-router'
 import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
-import { HttpResponse, http } from 'msw'
+import { HttpResponse, delay, http } from 'msw'
 import { expect, test } from 'vitest'
 import { createQueryClient } from '../api/queries'
 import { createAppRouter } from '../router'
@@ -123,6 +123,20 @@ test('the URL drives the request and back/forward restores each view', async () 
     expect(req?.has('country')).toBe(false)
     expect(req?.has('sort')).toBe(false)
   })
+})
+
+test('the detail panel shows a skeleton while the list is loading', async () => {
+  installApi()
+  server.use(
+    http.get('/api/jobs', async () => {
+      await delay(100)
+      return HttpResponse.json(listPage)
+    }),
+  )
+  await renderApp('/')
+
+  expect(within(jobDetail()).getByRole('status', { name: 'Loading job' })).toBeInTheDocument()
+  expect(await within(jobDetail()).findByText('80000.00 GBP / year')).toBeInTheDocument()
 })
 
 test('selecting a job loads its details by id, even when it is not in the list', async () => {
