@@ -11,6 +11,7 @@ import (
 	"github.com/shopspring/decimal"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/sqlc"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
 )
 
 type ClaimedPosting struct {
@@ -98,23 +99,16 @@ func claimedPosting(r sqlc.ClaimOutboxRow) ClaimedPosting {
 		Status:           r.Status,
 		Title:            r.Title,
 		Company:          r.Company,
-		City:             deref(r.City),
-		Country:          deref(r.Country),
+		City:             ptr.ValueOr(r.City, ""),
+		Country:          ptr.ValueOr(r.Country, ""),
 		Remote:           r.Remote,
 		SalaryUSDAnnual:  r.SalaryUsdAnnual,
 		CurrencyInferred: r.CurrencyInferred,
 		PostedOn:         r.PostedOn,
 		SalaryAmount:     r.SalaryAmount,
-		SalaryCurrency:   deref(r.SalaryCurrency),
-		SalaryUnit:       deref(r.SalaryUnit),
+		SalaryCurrency:   ptr.ValueOr(r.SalaryCurrency, ""),
+		SalaryUnit:       ptr.ValueOr(r.SalaryUnit, ""),
 	}
-}
-
-func deref(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }
 
 func (s *Store) PurgeProcessed(ctx context.Context, olderThan time.Duration) (int64, error) {

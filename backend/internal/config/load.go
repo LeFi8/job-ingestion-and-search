@@ -19,6 +19,20 @@ type Worker struct {
 	PollInterval     time.Duration
 }
 
+type API struct {
+	Addr             string
+	ElasticsearchURL string
+}
+
+func LoadAPI() (API, error) {
+	var env Env
+	cfg := API{
+		Addr:             env.String("API_ADDR"),
+		ElasticsearchURL: env.String("ELASTICSEARCH_URL"),
+	}
+	return cfg, env.Err()
+}
+
 func LoadMigrate() (Migrate, error) {
 	var env Env
 	cfg := Migrate{DatabaseURL: env.String("DATABASE_URL")}

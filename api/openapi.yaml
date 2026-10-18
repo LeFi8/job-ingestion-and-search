@@ -1,0 +1,155 @@
+openapi: 3.0.3
+info:
+  title: Job Search API
+  version: 1.0.0
+paths:
+  /api/jobs:
+    get:
+      operationId: getJobs
+      summary: Search approved jobs
+      parameters:
+        - name: q
+          in: query
+          description: Title search; typo-tolerant, prefix as you type. Blank lists all jobs.
+          schema:
+            type: string
+            maxLength: 200
+        - name: country
+          in: query
+          description: ISO 3166-1 alpha-2 codes; repeat for several.
+          style: form
+          explode: true
+          schema:
+            type: array
+            maxItems: 20
+            items:
+              type: string
+              pattern: "^[A-Z]{2}$"
+        - name: sort
+          in: query
+          description: Defaults to relevance when q is set, otherwise date_desc. Jobs without salary or date sort last.
+          schema:
+            type: string
+            enum: [relevance, salary_desc, salary_asc, date_desc, date_asc]
+        - name: page
+          in: query
+          description: page × per_page stays within the 10,000-result window.
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 200
+            default: 1
+        - name: per_page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 20
+      responses:
+        "200":
+          description: A page of jobs with country facets.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobsPage"
+        "400":
+          $ref: "#/components/responses/Problem"
+        "500":
+          $ref: "#/components/responses/Problem"
+        "503":
+          $ref: "#/components/responses/Problem"
+components:
+  responses:
+    Problem:
+      description: RFC 9457 problem details.
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Problem"
+  schemas:
+    JobsPage:
+      type: object
+      required: [items, total, page, per_page, facets]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobCard"
+        total:
+          type: integer
+          format: int64
+        page:
+          type: integer
+        per_page:
+          type: integer
+        facets:
+          $ref: "#/components/schemas/Facets"
+    Facets:
+      type: object
+      required: [country]
+      properties:
+        country:
+          type: array
+          items:
+            $ref: "#/components/schemas/Facet"
+    Facet:
+      type: object
+      required: [value, count]
+      properties:
+        value:
+          type: string
+        count:
+          type: integer
+          format: int64
+    JobCard:
+      type: object
+      required: [id, title, company, remote, salary_display, salary_usd_annual, currency_inferred]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        title_highlight:
+          description: The title split into plain-text segments; match marks the searched words.
+          type: array
+          items:
+            $ref: "#/components/schemas/HighlightSegment"
+        company:
+          type: string
+        city:
+          type: string
+        country:
+          type: string
+        remote:
+          type: boolean
+        salary_display:
+          description: The original salary, e.g. "62.50 CAD / hour".
+          type: string
+        salary_usd_annual:
+          type: integer
+          format: int64
+        currency_inferred:
+          type: boolean
+        posted_on:
+          type: string
+          format: date
+          x-go-type: string
+    HighlightSegment:
+      type: object
+      required: [text, match]
+      properties:
+        text:
+          type: string
+        match:
+          type: boolean
+    Problem:
+      type: object
+      required: [title, status]
+      properties:
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
