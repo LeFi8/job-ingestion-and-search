@@ -30,6 +30,8 @@ services:
       ES_JAVA_OPTS: -Xms512m -Xmx512m
     ports:
       - "9200:9200"
+    volumes:
+      - ./volumes/elasticsearch:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fs 'localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s'"]
       interval: 10s
@@ -78,6 +80,7 @@ services:
     environment:
       API_ADDR: :8080
       ELASTICSEARCH_URL: http://elasticsearch:9200
+      DATABASE_URL: *database-url
     ports:
       - "8080:8080"
     healthcheck:
@@ -88,5 +91,7 @@ services:
     depends_on:
       migrate:
         condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
       elasticsearch:
         condition: service_healthy

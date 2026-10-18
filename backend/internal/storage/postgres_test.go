@@ -1,10 +1,11 @@
 //go:build integration
 
-package postgres
+package storage
 
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"log/slog"
 	"os"
@@ -12,10 +13,12 @@ import (
 	"time"
 
 	"cloud.google.com/go/civil"
+	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/pgtest"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage/pgtest"
 )
 
 var testStore *Store
@@ -266,5 +269,80 @@ func TestQuarantine(t *testing.T) {
 	}
 	if got := countRows(t, ctx, "quarantine"); got != 1 {
 		t.Errorf("quarantine rows = %d, want 1", got)
+	}
+}
+
+func savedPostingID(t *testing.T, ctx context.Context, key string) uuid.UUID {
+	t.Helper()
+	var id uuid.UUID
+	if err := testStore.pool.QueryRow(ctx, "SELECT id FROM postings WHERE idempotency_key = $1", key).Scan(&id); err != nil {
+		t.Fatalf("read posting id: %v", err)
+	}
+	return id
+}
+
+func TestApprovedJob(t *testing.T) {
+	ctx := testContext(t)
+	reset(t, ctx)
+
+	amount := decimal.RequireFromString("62.50")
+	postedOn := civil.Date{Year: 2026, Month: 3, Day: 14}
+	normalized, err := json.Marshal(posting.Posting{
+		SourceID:    "test-feed",
+		Title:       "Backend Engineer",
+		Description: "Build services in Go.",
+		Company:     "TechCo",
+		CompanyType: posting.ConsultingAgency,
+		Location:    &posting.Location{City: "Austin", Region: "TX", Country: "US"},
+	})
+	if err != nil {
+		t.Fatalf("marshal posting: %v", err)
+	}
+
+	approved := approvedRecord()
+	approved.Normalized = normalized
+	approved.City = "Austin"
+	approved.Country = "US"
+	approved.SalaryAmount = &amount
+	approved.SalaryCurrency = "CAD"
+	approved.SalaryUnit = "hourly"
+	approved.CurrencyInferred = true
+	approved.PostedOn = &postedOn
+
+	rejected := approvedRecord()
+	rejected.IdempotencyKey = "idem-rejected"
+	rejected.Normalized = normalized
+	rejected.Status = "rejected"
+
+	for _, r := range []PostingRecord{approved, rejected} {
+		if _, err := testStore.SaveOutcome(ctx, r); err != nil {
+			t.Fatalf("SaveOutcome(%s) error = %v", r.IdempotencyKey, err)
+		}
+	}
+
+	got, err := testStore.ApprovedJob(ctx, savedPostingID(t, ctx, approved.IdempotencyKey))
+	if err != nil {
+		t.Fatalf("ApprovedJob(approved) error = %v", err)
+	}
+	if got.Description != "Build services in Go." || got.Region != "TX" || got.CompanyType != "consulting_agency" {
+		t.Errorf("normalized fields = %q, %q, %q", got.Description, got.Region, got.CompanyType)
+	}
+	if got.Title != "Backend Engineer" || got.Company != "TechCo" || got.City != "Austin" || got.Country != "US" || !got.Remote {
+		t.Errorf("posting columns = %+v", got)
+	}
+	if got.SalaryAmount == nil || !got.SalaryAmount.Equal(amount) || got.SalaryCurrency != "CAD" || got.SalaryUnit != "hourly" {
+		t.Errorf("salary = %v %q %q", got.SalaryAmount, got.SalaryCurrency, got.SalaryUnit)
+	}
+	if got.SalaryUSDAnnual != 100000 || !got.CurrencyInferred || got.PostedOn == nil || *got.PostedOn != postedOn {
+		t.Errorf("annual = %d, inferred = %v, posted_on = %v", got.SalaryUSDAnnual, got.CurrencyInferred, got.PostedOn)
+	}
+
+	for name, id := range map[string]uuid.UUID{
+		"rejected": savedPostingID(t, ctx, rejected.IdempotencyKey),
+		"unknown":  uuid.New(),
+	} {
+		if _, err := testStore.ApprovedJob(ctx, id); !errors.Is(err, ErrNotFound) {
+			t.Errorf("ApprovedJob(%s) error = %v, want ErrNotFound", name, err)
+		}
 	}
 }

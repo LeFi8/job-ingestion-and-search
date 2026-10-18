@@ -13,12 +13,12 @@ import (
 	"cloud.google.com/go/civil"
 	"github.com/shopspring/decimal"
 
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 type fakeStore struct {
-	rows           []postgres.ClaimedPosting
+	rows           []storage.ClaimedPosting
 	deadLettered   []int64
 	fnFailed       map[int64]string
 	fnErr          error
@@ -26,7 +26,7 @@ type fakeStore struct {
 	blockUntilDone bool
 }
 
-func (f *fakeStore) WithClaim(ctx context.Context, limit int, fn func([]postgres.ClaimedPosting) (map[int64]string, error)) ([]int64, error) {
+func (f *fakeStore) WithClaim(ctx context.Context, limit int, fn func([]storage.ClaimedPosting) (map[int64]string, error)) ([]int64, error) {
 	f.limit = limit
 	if f.blockUntilDone {
 		<-ctx.Done()
@@ -72,8 +72,8 @@ func amount(s string) *decimal.Decimal {
 	return &d
 }
 
-func approvedRow(id int64, posting string) postgres.ClaimedPosting {
-	return postgres.ClaimedPosting{
+func approvedRow(id int64, posting string) storage.ClaimedPosting {
+	return storage.ClaimedPosting{
 		OutboxID:         id,
 		PostingID:        posting,
 		Status:           "approved",
@@ -92,12 +92,12 @@ func approvedRow(id int64, posting string) postgres.ClaimedPosting {
 }
 
 func TestRelayBuildsActions(t *testing.T) {
-	rejected := postgres.ClaimedPosting{OutboxID: 8, PostingID: "p-rejected", Status: "rejected", Title: "Intern"}
+	rejected := storage.ClaimedPosting{OutboxID: 8, PostingID: "p-rejected", Status: "rejected", Title: "Intern"}
 	hourly := approvedRow(9, "p-hourly")
 	hourly.SalaryAmount, hourly.SalaryUnit, hourly.SalaryCurrency = amount("45.5"), "hourly", "USD"
 	noSalary := approvedRow(10, "p-nosalary")
 	noSalary.SalaryAmount, noSalary.SalaryUnit, noSalary.SalaryCurrency, noSalary.PostedOn, noSalary.City = nil, "", "", nil, ""
-	store := &fakeStore{rows: []postgres.ClaimedPosting{approvedRow(7, "p-approved"), rejected, hourly, noSalary}}
+	store := &fakeStore{rows: []storage.ClaimedPosting{approvedRow(7, "p-approved"), rejected, hourly, noSalary}}
 	ix := &fakeIndexer{}
 
 	counts, err := newRelay(store, ix, &bytes.Buffer{}).cycle(context.Background())
@@ -131,7 +131,7 @@ func TestRelayBuildsActions(t *testing.T) {
 func TestRelayFailsApprovedRowWithUnknownSalaryUnit(t *testing.T) {
 	bad := approvedRow(3, "p-bad")
 	bad.SalaryUnit = "monthly"
-	store := &fakeStore{rows: []postgres.ClaimedPosting{bad, approvedRow(4, "p-ok")}}
+	store := &fakeStore{rows: []storage.ClaimedPosting{bad, approvedRow(4, "p-ok")}}
 	ix := &fakeIndexer{}
 
 	if _, err := newRelay(store, ix, &bytes.Buffer{}).cycle(context.Background()); err != nil {
@@ -146,7 +146,7 @@ func TestRelayFailsApprovedRowWithUnknownSalaryUnit(t *testing.T) {
 }
 
 func TestRelayReportsItemFailures(t *testing.T) {
-	store := &fakeStore{rows: []postgres.ClaimedPosting{approvedRow(1, "a"), approvedRow(2, "b"), approvedRow(3, "c")}}
+	store := &fakeStore{rows: []storage.ClaimedPosting{approvedRow(1, "a"), approvedRow(2, "b"), approvedRow(3, "c")}}
 	ix := &fakeIndexer{results: func(a []search.Action) []search.ItemResult {
 		out := make([]search.ItemResult, len(a))
 		out[1].Err = errors.New("bulk item b: status 400: mapper_parsing_exception: bad")
@@ -163,7 +163,7 @@ func TestRelayReportsItemFailures(t *testing.T) {
 }
 
 func TestRelayRequestFailureRollsBack(t *testing.T) {
-	store := &fakeStore{rows: []postgres.ClaimedPosting{approvedRow(1, "a")}}
+	store := &fakeStore{rows: []storage.ClaimedPosting{approvedRow(1, "a")}}
 	ix := &fakeIndexer{err: errors.New("connection refused")}
 	var logs bytes.Buffer
 
@@ -183,7 +183,7 @@ func TestRelayRequestFailureRollsBack(t *testing.T) {
 }
 
 func TestRelayLogsDeadLettered(t *testing.T) {
-	store := &fakeStore{rows: []postgres.ClaimedPosting{approvedRow(1, "a"), approvedRow(2, "b")}, deadLettered: []int64{2}}
+	store := &fakeStore{rows: []storage.ClaimedPosting{approvedRow(1, "a"), approvedRow(2, "b")}, deadLettered: []int64{2}}
 	ix := &fakeIndexer{results: func(a []search.Action) []search.ItemResult {
 		out := make([]search.ItemResult, len(a))
 		out[1].Err = errors.New("poison")

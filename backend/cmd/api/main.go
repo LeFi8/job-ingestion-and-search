@@ -18,11 +18,13 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/config"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/httpapi"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 const (
 	shutdownTimeout = 10 * time.Second
-	searchTimeout   = 5 * time.Second
+	requestTimeout  = 5 * time.Second
+	connectTimeout  = 30 * time.Second
 )
 
 func main() {
@@ -61,8 +63,16 @@ func run(ctx context.Context, cfg config.API) error {
 		return err
 	}
 
+	connectCtx, cancel := context.WithTimeout(ctx, connectTimeout)
+	defer cancel()
+	store, err := storage.Open(connectCtx, cfg.DatabaseURL)
+	if err != nil {
+		return fmt.Errorf("open store: %w", err)
+	}
+	defer store.Close()
+
 	gin.SetMode(gin.ReleaseMode)
-	router, err := httpapi.NewRouter(es, searchTimeout, log)
+	router, err := httpapi.NewRouter(es, store, requestTimeout, log)
 	if err != nil {
 		return err
 	}

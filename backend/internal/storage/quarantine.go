@@ -1,11 +1,11 @@
-package postgres
+package storage
 
 import (
 	"context"
 	"fmt"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/sqlc"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage/sqlc"
 )
 
 func (s *Store) Quarantine(ctx context.Context, sourceID string, q raw.Quarantined) error {

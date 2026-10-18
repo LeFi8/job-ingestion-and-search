@@ -1,20 +1,21 @@
-name: backend
+name: ci
 
 on:
   push:
+    branches: [main]
     paths:
       - backend/**
       - api/**
       - compose.yaml
       - redocly.yaml
-      - .github/workflows/backend.yml
+      - .github/workflows/ci.yml
   pull_request:
     paths:
       - backend/**
       - api/**
       - compose.yaml
       - redocly.yaml
-      - .github/workflows/backend.yml
+      - .github/workflows/ci.yml
 
 permissions:
   contents: read

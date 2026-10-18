@@ -27,6 +27,68 @@ func (q *Queries) EnqueueAll(ctx context.Context) (int64, error) {
 	return result.RowsAffected(), nil
 }
 
+const getApprovedJob = `-- name: GetApprovedJob :one
+SELECT
+  id AS posting_id,
+  title,
+  company,
+  city,
+  country,
+  remote,
+  COALESCE(round(salary_usd_annual), 0)::bigint AS salary_usd_annual,
+  currency_inferred,
+  posted_on,
+  salary_amount,
+  salary_currency,
+  salary_unit,
+  (normalized->>'Description')::text AS description,
+  COALESCE(normalized->'Location'->>'Region', '')::text AS region,
+  (normalized->>'CompanyType')::text AS company_type
+FROM postings
+WHERE id = $1 AND status = 'approved'
+`
+
+type GetApprovedJobRow struct {
+	PostingID        uuid.UUID        `json:"posting_id"`
+	Title            string           `json:"title"`
+	Company          string           `json:"company"`
+	City             *string          `json:"city"`
+	Country          *string          `json:"country"`
+	Remote           bool             `json:"remote"`
+	SalaryUsdAnnual  int64            `json:"salary_usd_annual"`
+	CurrencyInferred bool             `json:"currency_inferred"`
+	PostedOn         *civil.Date      `json:"posted_on"`
+	SalaryAmount     *decimal.Decimal `json:"salary_amount"`
+	SalaryCurrency   *string          `json:"salary_currency"`
+	SalaryUnit       *string          `json:"salary_unit"`
+	Description      string           `json:"description"`
+	Region           string           `json:"region"`
+	CompanyType      string           `json:"company_type"`
+}
+
+func (q *Queries) GetApprovedJob(ctx context.Context, id uuid.UUID) (GetApprovedJobRow, error) {
+	row := q.db.QueryRow(ctx, getApprovedJob, id)
+	var i GetApprovedJobRow
+	err := row.Scan(
+		&i.PostingID,
+		&i.Title,
+		&i.Company,
+		&i.City,
+		&i.Country,
+		&i.Remote,
+		&i.SalaryUsdAnnual,
+		&i.CurrencyInferred,
+		&i.PostedOn,
+		&i.SalaryAmount,
+		&i.SalaryCurrency,
+		&i.SalaryUnit,
+		&i.Description,
+		&i.Region,
+		&i.CompanyType,
+	)
+	return i, err
+}
+
 const upsertPosting = `-- name: UpsertPosting :one
 INSERT INTO postings (
   source_id,

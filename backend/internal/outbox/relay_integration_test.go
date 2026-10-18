@@ -22,11 +22,11 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/approval"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/fx"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres/pgtest"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search/estest"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage/pgtest"
 )
 
 var (
@@ -62,7 +62,7 @@ func runSuite(m *testing.M) int {
 
 type env struct {
 	ctx   context.Context
-	store *postgres.Store
+	store *storage.Store
 	conn  *pgx.Conn
 	es    *search.Client
 	logs  *bytes.Buffer
@@ -73,7 +73,7 @@ func setup(t *testing.T) *env {
 	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
 	t.Cleanup(cancel)
 
-	store, err := postgres.Open(ctx, pgURL)
+	store, err := storage.Open(ctx, pgURL)
 	if err != nil {
 		t.Fatalf("postgres.Open() error = %v", err)
 	}
@@ -229,8 +229,8 @@ func TestApprovedThenRejected(t *testing.T) {
 
 type crashAfterFn struct{ Store }
 
-func (c crashAfterFn) WithClaim(ctx context.Context, limit int, fn func([]postgres.ClaimedPosting) (map[int64]string, error)) ([]int64, error) {
-	return c.Store.WithClaim(ctx, limit, func(rows []postgres.ClaimedPosting) (map[int64]string, error) {
+func (c crashAfterFn) WithClaim(ctx context.Context, limit int, fn func([]storage.ClaimedPosting) (map[int64]string, error)) ([]int64, error) {
+	return c.Store.WithClaim(ctx, limit, func(rows []storage.ClaimedPosting) (map[int64]string, error) {
 		if _, err := fn(rows); err != nil {
 			return nil, err
 		}

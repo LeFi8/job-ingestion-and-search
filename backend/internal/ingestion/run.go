@@ -13,11 +13,11 @@ import (
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/approval"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
-	"github.com/lefi8/job-ingestion-and-search/backend/internal/postgres"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 type Saver interface {
-	SaveOutcome(ctx context.Context, r postgres.PostingRecord) (changed bool, err error)
+	SaveOutcome(ctx context.Context, r storage.PostingRecord) (changed bool, err error)
 	Quarantine(ctx context.Context, sourceID string, q raw.Quarantined) error
 }
 
@@ -52,7 +52,7 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 		firstIndex[rec.IdempotencyKey] = o.Index
 
 		changed, err := s.SaveOutcome(ctx, rec)
-		if errors.Is(err, postgres.ErrInvalid) {
+		if errors.Is(err, storage.ErrInvalid) {
 			sum.Invalid++
 			log.Error("job.invalid", "index", o.Index, "error", err.Error())
 			continue
@@ -75,14 +75,14 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 	return sum, nil
 }
 
-func newRecord(sourceID string, decidedAt time.Time, o Outcome) (postgres.PostingRecord, error) {
+func newRecord(sourceID string, decidedAt time.Time, o Outcome) (storage.PostingRecord, error) {
 	key, err := idempotencyKey(sourceID, o.Raw, o.Posting)
 	if err != nil {
-		return postgres.PostingRecord{}, err
+		return storage.PostingRecord{}, err
 	}
 	normalized, err := json.Marshal(o.Posting)
 	if err != nil {
-		return postgres.PostingRecord{}, fmt.Errorf("marshal normalized posting: %w", err)
+		return storage.PostingRecord{}, fmt.Errorf("marshal normalized posting: %w", err)
 	}
 	reasons := o.Decision.Reasons
 	if reasons == nil {
@@ -90,10 +90,10 @@ func newRecord(sourceID string, decidedAt time.Time, o Outcome) (postgres.Postin
 	}
 	reasonsJSON, err := json.Marshal(reasons)
 	if err != nil {
-		return postgres.PostingRecord{}, fmt.Errorf("marshal reasons: %w", err)
+		return storage.PostingRecord{}, fmt.Errorf("marshal reasons: %w", err)
 	}
 
-	rec := postgres.PostingRecord{
+	rec := storage.PostingRecord{
 		SourceID:       sourceID,
 		IdempotencyKey: key,
 		Raw:            o.RawBytes,

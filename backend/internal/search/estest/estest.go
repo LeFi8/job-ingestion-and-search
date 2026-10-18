@@ -6,15 +6,31 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"time"
 
 	"github.com/testcontainers/testcontainers-go"
-	tcelasticsearch "github.com/testcontainers/testcontainers-go/modules/elasticsearch"
+	"github.com/testcontainers/testcontainers-go/wait"
+)
+
+const (
+	httpPort       = "9200/tcp"
+	startupTimeout = 3 * time.Minute
 )
 
 func Start(ctx context.Context) (string, func(), error) {
-	container, err := tcelasticsearch.Run(ctx,
+	container, err := testcontainers.Run(ctx,
 		"docker.elastic.co/elasticsearch/elasticsearch:9.5.4",
-		testcontainers.WithEnv(map[string]string{"xpack.security.enabled": "false"}),
+		testcontainers.WithExposedPorts(httpPort),
+		testcontainers.WithEnv(map[string]string{
+			"discovery.type":         "single-node",
+			"xpack.security.enabled": "false",
+			"cluster.routing.allocation.disk.threshold_enabled": "false",
+			"ingest.geoip.downloader.enabled":                   "false",
+			"ES_JAVA_OPTS":                                      "-Xms512m -Xmx512m",
+		}),
+		testcontainers.WithWaitStrategyAndDeadline(startupTimeout,
+			wait.ForHTTP("/").WithPort(httpPort).WithStartupTimeout(startupTimeout),
+		),
 	)
 	if err != nil {
 		if container != nil {
@@ -27,5 +43,10 @@ func Start(ctx context.Context) (string, func(), error) {
 			slog.Error("terminate elasticsearch container", "error", err)
 		}
 	}
-	return container.Settings.Address, stop, nil
+	url, err := container.PortEndpoint(ctx, httpPort, "http")
+	if err != nil {
+		stop()
+		return "", nil, fmt.Errorf("elasticsearch endpoint: %w", err)
+	}
+	return url, stop, nil
 }
