@@ -95,3 +95,15 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+
+  web:
+    build: ./frontend
+    profiles: [all]
+    restart: unless-stopped
+    environment:
+      API_URL: http://api:8080
+    ports:
+      - "5173:5173"
+    depends_on:
+      api:
+        condition: service_healthy

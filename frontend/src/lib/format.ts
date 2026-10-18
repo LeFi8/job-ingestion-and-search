@@ -1,0 +1,31 @@
+const usd = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+  maximumFractionDigits: 0,
+})
+
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' })
+
+const postedOn = new Intl.DateTimeFormat('en-US', {
+  month: 'short',
+  day: 'numeric',
+  year: 'numeric',
+  timeZone: 'UTC',
+})
+
+export function formatUsdAnnual(n: number): string {
+  return `${usd.format(n)}/yr`
+}
+
+export function formatLocation(parts: (string | undefined)[]): string {
+  return parts.filter(Boolean).join(', ')
+}
+
+export function formatPostedOn(d?: string): string {
+  if (d === undefined) return 'Date not provided'
+  return postedOn.format(new Date(d))
+}
+
+export function formatCountry(code: string): string {
+  return regionNames.of(code) ?? code
+}
