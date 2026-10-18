@@ -19,7 +19,7 @@ export function Pagination({
     <nav aria-label="Pagination" className="flex items-center justify-between py-3 text-sm">
       {page > 1 ? (
         <Button asChild variant="outline" size="sm">
-          <Link from="/" to="/" search={(prev) => ({ ...prev, page: page - 1 })}>
+          <Link from="/" to="/" search={(prev) => ({ ...prev, page: page - 1, job: undefined })}>
             <ChevronLeft aria-hidden="true" />
             Prev
           </Link>
@@ -33,7 +33,7 @@ export function Pagination({
       <span className="text-muted-foreground">{`Page ${String(page)} of ${String(pages)}`}</span>
       {page < pages ? (
         <Button asChild variant="outline" size="sm">
-          <Link from="/" to="/" search={(prev) => ({ ...prev, page: page + 1 })}>
+          <Link from="/" to="/" search={(prev) => ({ ...prev, page: page + 1, job: undefined })}>
             Next
             <ChevronRight aria-hidden="true" />
           </Link>

@@ -173,6 +173,21 @@ test('an empty result names the search and clearing filters restores the list', 
   ).toBeInTheDocument()
 })
 
+test('paging to another page clears the selected job', async () => {
+  server.use(
+    http.get('/api/jobs', () => HttpResponse.json({ ...listPage, total: 45 })),
+    http.get('/api/jobs/:id', ({ params }) => HttpResponse.json(jobDetails[String(params.id)])),
+  )
+  const user = userEvent.setup()
+  const { urlParams } = await renderApp(`/?job=${customerSuccessManager.id}`)
+
+  await user.click(await within(jobList()).findByRole('link', { name: /Next/ }))
+  await waitFor(() => {
+    expect(urlParams().get('page')).toBe('2')
+  })
+  expect(urlParams().has('job')).toBe(false)
+})
+
 test('a page past the end of the results links to the last page', async () => {
   server.use(
     http.get('/api/jobs', ({ request }) => {
