@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -20,7 +21,8 @@ type JobSearcher interface {
 }
 
 type handler struct {
-	searcher JobSearcher
+	searcher      JobSearcher
+	searchTimeout time.Duration
 }
 
 func (h handler) GetJobs(c *gin.Context, params GetJobsParams) {
@@ -31,7 +33,9 @@ func (h handler) GetJobs(c *gin.Context, params GetJobsParams) {
 		Page:      ptr.ValueOr(params.Page, defaultPage),
 		PerPage:   ptr.ValueOr(params.PerPage, defaultPerPage),
 	}
-	page, err := h.searcher.Search(c.Request.Context(), query)
+	ctx, cancel := context.WithTimeout(c.Request.Context(), h.searchTimeout)
+	defer cancel()
+	page, err := h.searcher.Search(ctx, query)
 	if err != nil {
 		_ = c.Error(err)
 		writeProblem(c, http.StatusServiceUnavailable, "Search is temporarily unavailable. Try again later.")

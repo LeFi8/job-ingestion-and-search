@@ -18,7 +18,10 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
 )
 
-const shutdownTimeout = 10 * time.Second
+const (
+	shutdownTimeout = 10 * time.Second
+	searchTimeout   = 5 * time.Second
+)
 
 func main() {
 	cfg, err := config.LoadAPI()
@@ -46,7 +49,7 @@ func run(ctx context.Context, cfg config.API) error {
 	}
 
 	gin.SetMode(gin.ReleaseMode)
-	router, err := httpapi.NewRouter(es, log)
+	router, err := httpapi.NewRouter(es, searchTimeout, log)
 	if err != nil {
 		return err
 	}

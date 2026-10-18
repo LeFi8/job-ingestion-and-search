@@ -10,32 +10,45 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ptr"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/search"
 )
 
+const testSearchTimeout = 50 * time.Millisecond
+
 type fakeSearcher struct {
 	called bool
+	block  bool
 	got    search.Query
 	page   search.Page
 	err    error
 }
 
-func (f *fakeSearcher) Search(_ context.Context, q search.Query) (search.Page, error) {
+func (f *fakeSearcher) Search(ctx context.Context, q search.Query) (search.Page, error) {
 	f.called = true
 	f.got = q
+	if f.block {
+		<-ctx.Done()
+		return search.Page{}, ctx.Err()
+	}
 	return f.page, f.err
+}
+
+func newTestRouter(t *testing.T, s JobSearcher) http.Handler {
+	t.Helper()
+	router, err := NewRouter(s, testSearchTimeout, slog.New(slog.DiscardHandler))
+	if err != nil {
+		t.Fatalf("NewRouter() error = %v", err)
+	}
+	return router
 }
 
 func serve(t *testing.T, s JobSearcher, target string) *httptest.ResponseRecorder {
 	t.Helper()
-	router, err := NewRouter(s, slog.New(slog.DiscardHandler))
-	if err != nil {
-		t.Fatalf("NewRouter() error = %v", err)
-	}
 	rec := httptest.NewRecorder()
-	router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
+	newTestRouter(t, s).ServeHTTP(rec, httptest.NewRequest(http.MethodGet, target, nil))
 	return rec
 }
 
@@ -128,6 +141,23 @@ func TestGetJobsSearchErrorIs503WithoutLeak(t *testing.T) {
 	decodeProblem(t, rec, http.StatusServiceUnavailable)
 	if strings.Contains(rec.Body.String(), "es-internal") {
 		t.Errorf("body leaks the search error: %s", rec.Body)
+	}
+}
+
+func TestGetJobsSearchTimeoutIs503(t *testing.T) {
+	router := newTestRouter(t, &fakeSearcher{block: true})
+	done := make(chan *httptest.ResponseRecorder, 1)
+	go func() {
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/api/jobs", nil))
+		done <- rec
+	}()
+
+	select {
+	case rec := <-done:
+		decodeProblem(t, rec, http.StatusServiceUnavailable)
+	case <-time.After(2 * time.Second):
+		t.Fatal("no response 2s after the request; the search call has no deadline")
 	}
 }
 

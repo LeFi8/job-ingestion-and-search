@@ -13,7 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func NewRouter(s JobSearcher, log *slog.Logger) (*gin.Engine, error) {
+func NewRouter(s JobSearcher, searchTimeout time.Duration, log *slog.Logger) (*gin.Engine, error) {
 	spec, err := GetSwagger()
 	if err != nil {
 		return nil, fmt.Errorf("load openapi spec: %w", err)
@@ -31,7 +31,7 @@ func NewRouter(s JobSearcher, log *slog.Logger) (*gin.Engine, error) {
 		return nil, err
 	}
 	api := r.Group("", validator)
-	RegisterHandlersWithOptions(api, handler{searcher: s}, GinServerOptions{
+	RegisterHandlersWithOptions(api, handler{searcher: s, searchTimeout: searchTimeout}, GinServerOptions{
 		ErrorHandler: func(c *gin.Context, err error, status int) { writeProblem(c, status, err.Error()) },
 	})
 	return r, nil
