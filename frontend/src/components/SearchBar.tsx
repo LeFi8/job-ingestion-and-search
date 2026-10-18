@@ -1,11 +1,15 @@
 import { getRouteApi } from '@tanstack/react-router'
+import { Search } from 'lucide-react'
 import { useState } from 'react'
 import type { JobsPage } from '../api/client'
 import { formatCountry } from '../lib/format'
 import { useDebouncedCallback } from '../lib/useDebouncedCallback'
 import { sortValues } from '../routes/jobsSearch'
+import { Input } from './ui/input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 const route = getRouteApi('/')
+const allCountries = 'all'
 
 const sortLabels: Record<(typeof sortValues)[number], string> = {
   relevance: 'Relevance',
@@ -52,9 +56,13 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
 
   return (
     <div className="flex flex-wrap gap-2">
-      <label className="min-w-48 flex-1">
+      <label className="relative basis-full sm:min-w-48 sm:flex-1 sm:basis-auto">
         <span className="sr-only">Search job titles</span>
-        <input
+        <Search
+          className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          aria-hidden="true"
+        />
+        <Input
           type="search"
           value={draft}
           placeholder="Search job titles…"
@@ -64,52 +72,60 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
           onKeyDown={(e) => {
             if (e.key === 'Escape') changeQuery('')
           }}
-          className="w-full rounded border border-gray-300 px-3 py-2"
+          className="h-9 bg-muted pl-9"
         />
       </label>
-      <label>
-        <span className="sr-only">Country</span>
-        <select
-          value={search.country ?? ''}
-          onChange={(e) => {
-            void navigate({
-              search: (prev) => ({
-                ...prev,
-                country: e.target.value || undefined,
-                page: undefined,
-                job: undefined,
-              }),
-            })
-          }}
-          className="rounded border border-gray-300 px-3 py-2"
+      <Select
+        value={search.country ?? allCountries}
+        onValueChange={(value) => {
+          void navigate({
+            search: (prev) => ({
+              ...prev,
+              country: value === allCountries ? undefined : value,
+              page: undefined,
+              job: undefined,
+            }),
+          })
+        }}
+      >
+        <SelectTrigger
+          aria-label="Country"
+          className="flex-1 bg-muted data-[size=default]:h-9 sm:min-w-40 sm:flex-none"
         >
-          <option value="">All countries</option>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value={allCountries}>All countries</SelectItem>
           {countries.map((f) => (
-            <option key={f.value} value={f.value}>
+            <SelectItem key={f.value} value={f.value}>
               {`${formatCountry(f.value)} (${String(f.count)})`}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-      </label>
-      <label>
-        <span className="sr-only">Sort by</span>
-        <select
-          value={search.sort ?? (hasQuery ? 'relevance' : 'date_desc')}
-          onChange={(e) => {
-            const sort = sortValues.find((s) => s === e.target.value)
-            void navigate({
-              search: (prev) => ({ ...prev, sort, page: undefined, job: undefined }),
-            })
-          }}
-          className="rounded border border-gray-300 px-3 py-2"
+        </SelectContent>
+      </Select>
+      <Select
+        value={search.sort ?? (hasQuery ? 'relevance' : 'date_desc')}
+        onValueChange={(value) => {
+          const sort = sortValues.find((s) => s === value)
+          void navigate({
+            search: (prev) => ({ ...prev, sort, page: undefined, job: undefined }),
+          })
+        }}
+      >
+        <SelectTrigger
+          aria-label="Sort by"
+          className="flex-1 bg-muted data-[size=default]:h-9 sm:min-w-36 sm:flex-none"
         >
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
           {sortOptions.map((s) => (
-            <option key={s} value={s}>
+            <SelectItem key={s} value={s}>
               {sortLabels[s]}
-            </option>
+            </SelectItem>
           ))}
-        </select>
-      </label>
+        </SelectContent>
+      </Select>
     </div>
   )
 }

@@ -5,6 +5,11 @@ import { requests, server } from './server'
 
 server.listen({ onUnhandledFrame: 'error' })
 
+Element.prototype.hasPointerCapture = () => false
+Element.prototype.setPointerCapture = () => undefined
+Element.prototype.releasePointerCapture = () => undefined
+Element.prototype.scrollIntoView = () => undefined
+
 afterEach(() => {
   cleanup()
   server.resetHandlers()
