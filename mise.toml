@@ -1,0 +1,35 @@
+[tools]
+go = "1.27.2"
+
+[env]
+_.file = ".env"
+
+[tasks.compose]
+run = "docker compose up -d --wait"
+
+[tasks."compose:all"]
+run = "docker compose --profile all up -d --build --wait"
+
+[tasks.migrate]
+dir = "backend"
+run = "go run ./cmd/migrate"
+
+[tasks.test]
+dir = "backend"
+run = "go test ./..."
+
+[tasks."test:integration"]
+dir = "backend"
+run = "go test -tags integration ./..."
+
+[tasks.seed]
+dir = "backend"
+run = "go run ./cmd/ingest ../data/sample.json"
+
+[tasks.api]
+dir = "backend"
+run = "go run ./cmd/api"
+
+[tasks.worker]
+dir = "backend"
+run = "go run ./cmd/worker"
