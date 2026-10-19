@@ -1,6 +1,6 @@
 import { QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createMemoryHistory } from '@tanstack/react-router'
-import { cleanup, render, screen, waitFor, within } from '@testing-library/react'
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react'
 import userEvent, { type UserEvent } from '@testing-library/user-event'
 import { HttpResponse, delay, http } from 'msw'
 import { expect, test } from 'vitest'
@@ -33,13 +33,18 @@ function installApi() {
 
 async function renderApp(url: string) {
   const history = createMemoryHistory({ initialEntries: [url] })
+  const queryClient = createQueryClient()
   render(
-    <QueryClientProvider client={createQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <RouterProvider router={createAppRouter(history)} />
     </QueryClientProvider>,
   )
   await screen.findByRole('region', { name: 'Job list' })
-  return { history, urlParams: () => new URLSearchParams(history.location.search) }
+  return {
+    history,
+    queryClient,
+    urlParams: () => new URLSearchParams(history.location.search),
+  }
 }
 
 async function pickOption(user: UserEvent, combobox: string, option: string) {
@@ -77,7 +82,11 @@ test('lists jobs, shows the selected job and searches by title', async () => {
   await waitFor(() => {
     expect(lastJobsRequest()?.get('q')).toBe('eng')
   })
-  expect(jobsRequests().map((u) => u.searchParams.get('q'))).not.toContain('e')
+  expect(
+    jobsRequests()
+      .map((u) => u.searchParams.get('q'))
+      .filter(Boolean),
+  ).toEqual(['eng'])
   const marks = await within(jobList()).findAllByText('Engineer', { selector: 'mark' })
   expect(marks.length).toBeGreaterThan(0)
 })
@@ -272,4 +281,148 @@ test('special characters reach the API intact', async () => {
   await waitFor(() => {
     expect(lastJobsRequest()?.get('q')).toBe('C++ & 100%')
   })
+})
+
+const pause = (ms: number) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms)
+  })
+
+test('clearing filters during the debounce keeps them clear', async () => {
+  installApi()
+  server.use(
+    http.get('/api/jobs', ({ request }) =>
+      new URL(request.url).searchParams.get('q') === 'zzz'
+        ? HttpResponse.json({ ...listPage, items: [], total: 0, facets: { country: [] } })
+        : undefined,
+    ),
+  )
+  const user = userEvent.setup()
+  const { urlParams } = await renderApp('/?q=zzz')
+  await within(jobList()).findByText("No jobs match 'zzz'")
+
+  await user.type(screen.getByRole('searchbox', { name: 'Search job titles' }), 'a')
+  await user.click(within(jobList()).getByRole('button', { name: 'Clear filters' }))
+  await pause(500)
+
+  expect(urlParams().has('q')).toBe(false)
+  expect(screen.getByRole('searchbox', { name: 'Search job titles' })).toHaveValue('')
+})
+
+test('escape in an empty search keeps page and job', async () => {
+  installApi()
+  const user = userEvent.setup()
+  const { urlParams } = await renderApp(`/?page=2&job=${cybersecuritySpecialist.id}`)
+
+  await user.type(screen.getByRole('searchbox', { name: 'Search job titles' }), '{Escape}')
+  await pause(500)
+
+  expect(urlParams().get('page')).toBe('2')
+  expect(urlParams().get('job')).toBe(cybersecuritySpecialist.id)
+})
+
+test('the search box stops at 200 characters', async () => {
+  installApi()
+  const user = userEvent.setup()
+  const { urlParams } = await renderApp('/')
+  const box = screen.getByRole('searchbox', { name: 'Search job titles' })
+
+  await user.click(box)
+  await user.paste('a'.repeat(201))
+
+  expect(box).toHaveValue('a'.repeat(200))
+  await waitFor(() => {
+    expect(urlParams().get('q')).toBe('a'.repeat(200))
+  })
+})
+
+const badRequest = () =>
+  HttpResponse.json(
+    { title: 'Bad Request', status: 400, detail: 'Request rejected.' },
+    { status: 400, headers: { 'Content-Type': 'application/problem+json' } },
+  )
+
+test('pagination shows the requested page while it loads', async () => {
+  server.use(
+    http.get('/api/jobs', async ({ request }) => {
+      const page = Number(new URL(request.url).searchParams.get('page') ?? '1')
+      if (page === 2) await delay(1000)
+      return HttpResponse.json({ ...listPage, total: 45, page })
+    }),
+    http.get('/api/jobs/:id', ({ params }) => HttpResponse.json(jobDetails[String(params.id)])),
+  )
+  const user = userEvent.setup()
+  await renderApp('/')
+
+  await user.click(await within(jobList()).findByRole('link', { name: /Next/ }))
+  expect(
+    await within(jobList()).findByText('Page 2 of 3', {}, { timeout: 500 }),
+  ).toBeInTheDocument()
+})
+
+test('a failed background refetch keeps the list', async () => {
+  installApi()
+  const { queryClient } = await renderApp('/')
+  await within(jobList()).findByRole('link', { name: /Project Manager/ })
+
+  server.use(http.get('/api/jobs', badRequest))
+  await queryClient.refetchQueries({ queryKey: ['jobs'] })
+  await waitFor(() => {
+    expect(
+      queryClient.getQueryCache().find({ queryKey: ['jobs'], exact: false })?.state.status,
+    ).toBe('error')
+  })
+
+  expect(within(jobList()).queryByRole('alert')).toBeNull()
+  expect(within(jobList()).getByRole('link', { name: /Project Manager/ })).toBeInTheDocument()
+})
+
+test('a failed new page shows the error', async () => {
+  server.use(
+    http.get('/api/jobs', ({ request }) =>
+      new URL(request.url).searchParams.get('page') === '2'
+        ? badRequest()
+        : HttpResponse.json({ ...listPage, total: 45 }),
+    ),
+    http.get('/api/jobs/:id', ({ params }) => HttpResponse.json(jobDetails[String(params.id)])),
+  )
+  const user = userEvent.setup()
+  await renderApp('/')
+
+  await user.click(await within(jobList()).findByRole('link', { name: /Next/ }))
+  expect(await within(jobList()).findByRole('alert')).toHaveTextContent('Request rejected.')
+})
+
+test('an empty index offers no clear button', async () => {
+  server.use(
+    http.get('/api/jobs', () =>
+      HttpResponse.json({ ...listPage, items: [], total: 0, facets: { country: [] } }),
+    ),
+  )
+  await renderApp('/')
+
+  expect(await within(jobList()).findByText('No jobs')).toBeInTheDocument()
+  expect(within(jobList()).queryByRole('button', { name: 'Clear filters' })).toBeNull()
+})
+
+test('a keystroke typed while the previous commit lands is still searched', async () => {
+  installApi()
+  const { history, urlParams } = await renderApp('/')
+  const box = screen.getByRole('searchbox', { name: 'Search job titles' })
+  let typed = false
+  const unsubscribe = history.subscribe(() => {
+    if (typed) return
+    typed = true
+    fireEvent.change(box, { target: { value: 'abc' } })
+  })
+
+  fireEvent.change(box, { target: { value: 'ab' } })
+  await waitFor(() => {
+    expect(typed).toBe(true)
+  })
+  await pause(500)
+  unsubscribe()
+
+  expect(urlParams().get('q')).toBe('abc')
+  expect(box).toHaveValue('abc')
 })

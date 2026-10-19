@@ -5,10 +5,12 @@ import { Pagination } from './Pagination'
 
 export function JobList({
   page,
+  currentPage,
   selectedId,
   isFetching,
 }: {
   page: JobsPage
+  currentPage: number
   selectedId: string | undefined
   isFetching: boolean
 }) {
@@ -24,7 +26,7 @@ export function JobList({
           </li>
         ))}
       </ul>
-      <Pagination page={page.page} total={page.total} perPage={perPage} />
+      <Pagination page={currentPage} total={page.total} perPage={perPage} />
     </div>
   )
 }

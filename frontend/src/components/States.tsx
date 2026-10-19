@@ -49,16 +49,18 @@ export function EmptyState({
 }: {
   q: string
   country: string | undefined
-  onClear: () => void
+  onClear: (() => void) | undefined
 }) {
   const message = `No jobs${q ? ` match '${q}'` : ''}${country ? ` in ${formatCountry(country)}` : ''}`
   return (
     <div className="flex flex-col items-center gap-3 rounded-xl border bg-card p-8 text-center">
       <SearchX className="size-8 text-muted-foreground" aria-hidden="true" />
       <p className="font-medium">{message}</p>
-      <Button variant="outline" onClick={onClear}>
-        Clear filters
-      </Button>
+      {onClear && (
+        <Button variant="outline" onClick={onClear}>
+          Clear filters
+        </Button>
+      )}
     </div>
   )
 }

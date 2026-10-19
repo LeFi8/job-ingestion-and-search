@@ -38,7 +38,7 @@ export function JobsPage() {
           aria-label="Job list"
           className={`${showDetailOnly ? 'hidden lg:block' : ''} min-h-0 overflow-y-auto p-4`}
         >
-          {jobs.isError ? (
+          {jobs.isLoadingError ? (
             <ErrorState
               error={jobs.error}
               onRetry={() => {
@@ -51,14 +51,23 @@ export function JobsPage() {
             <EmptyState
               q={search.q.trim()}
               country={search.country}
-              onClear={() => {
-                void navigate({ search: {} })
-              }}
+              onClear={
+                search.q.trim() !== '' || search.country !== undefined
+                  ? () => {
+                      void navigate({ search: {} })
+                    }
+                  : undefined
+              }
             />
           ) : jobs.data.items.length === 0 ? (
             <PageOutOfRange page={search.page} lastPage={pageCount(jobs.data.total, perPage)} />
           ) : (
-            <JobList page={jobs.data} selectedId={selectedId} isFetching={jobs.isFetching} />
+            <JobList
+              page={jobs.data}
+              currentPage={search.page}
+              selectedId={selectedId}
+              isFetching={jobs.isFetching}
+            />
           )}
         </section>
         <section

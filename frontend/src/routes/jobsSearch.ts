@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import type { Sort } from '../api/client'
 
 export const sortValues = [
   'relevance',
@@ -6,9 +7,10 @@ export const sortValues = [
   'salary_asc',
   'date_desc',
   'date_asc',
-] as const
+] as const satisfies readonly NonNullable<Sort>[]
 
 export const maxPage = 200
+export const maxQueryLength = 200
 
 export function pageCount(total: number, perPage: number): number {
   return Math.min(Math.ceil(total / perPage), maxPage)
@@ -16,7 +18,7 @@ export function pageCount(total: number, perPage: number): number {
 
 export const jobsSearchSchema = z
   .object({
-    q: z.string().max(200).catch('').default(''),
+    q: z.string().max(maxQueryLength).catch('').default(''),
     country: z
       .string()
       .regex(/^[A-Z]{2}$/)
