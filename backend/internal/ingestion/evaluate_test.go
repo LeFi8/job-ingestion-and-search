@@ -1,6 +1,8 @@
 package ingestion_test
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -35,6 +37,15 @@ func (f fakeDetector) Detect(text string) (posting.Language, bool) {
 	return posting.English, true
 }
 
+func newEngine(t *testing.T, p approval.Policy, rates approval.FXRates, lang approval.LanguageDetector) *approval.Engine {
+	t.Helper()
+	engine, err := approval.NewEngine(p, rates, lang)
+	if err != nil {
+		t.Fatalf("NewEngine() error = %v", err)
+	}
+	return engine
+}
+
 func loadExpectedDecisions(t *testing.T) []expectedDecision {
 	t.Helper()
 	data, err := os.ReadFile(filepath.Join("testdata", "expected_decisions.json"))
@@ -55,7 +66,7 @@ func TestPipelineFixture(t *testing.T) {
 		"Rejoignez notre équipe pour concevoir des modèles de machine learning avancés.": {lang: posting.French, reliable: true},
 		"Entwickeln Sie mobile Anwendungen für iOS und Android.":                         {lang: posting.German, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	f, err := os.Open(filepath.Join("testdata", "pipeline_fixture.json"))
 	if err != nil {
@@ -126,8 +137,8 @@ func TestPipelineFixtureRealLingua(t *testing.T) {
 	}
 
 	expected := loadExpectedDecisions(t)
-	detector := langdetect.New(langdetect.MinRelativeDistance)
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	detector := langdetect.New()
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	f, err := os.Open(filepath.Join("testdata", "pipeline_fixture.json"))
 	if err != nil {
@@ -172,7 +183,7 @@ func TestPipelineQuarantined(t *testing.T) {
 		{"title":"Frontend Engineer","company":"TechCo","salary":{"value":110000,"currency":"USD"},"employment_type":"Full-Time","location":{"city":"Austin","country":"USA"}}
 	]`
 
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, fakeDetector{})
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, fakeDetector{})
 	outcomes, quarantined, err := ingestion.Evaluate(strings.NewReader(input), "test-feed", engine)
 	if err != nil {
 		t.Fatalf("Evaluate() unexpected error = %v", err)
@@ -190,9 +201,102 @@ func TestPipelineQuarantined(t *testing.T) {
 
 func TestPipelineInvalidJSON(t *testing.T) {
 	input := `[{"title":"Truncated"`
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, fakeDetector{})
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, fakeDetector{})
 	_, _, err := ingestion.Evaluate(strings.NewReader(input), "test-feed", engine)
 	if err == nil {
 		t.Fatal("expected error on truncated JSON feed, got nil")
+	}
+}
+
+type sampleGolden struct {
+	Fingerprints map[string]string  `json:"fingerprints"`
+	Decisions    []expectedDecision `json:"decisions"`
+}
+
+func fingerprint(t *testing.T, outcomes []ingestion.Outcome) string {
+	t.Helper()
+	type entry struct {
+		Index     int
+		Approved  bool
+		Market    string
+		Reasons   []approval.Reason
+		AnnualUSD string
+	}
+	entries := make([]entry, len(outcomes))
+	for i, o := range outcomes {
+		entries[i] = entry{Index: o.Index, Approved: o.Decision.Approved(), Market: o.Decision.Market, Reasons: o.Decision.Reasons}
+		if o.Decision.FX != nil {
+			entries[i].AnnualUSD = o.Decision.FX.AnnualUSD.StringFixed(2)
+		}
+	}
+	data, err := json.Marshal(entries)
+	if err != nil {
+		t.Fatalf("marshal fingerprint entries: %v", err)
+	}
+	sum := sha256.Sum256(data)
+	return hex.EncodeToString(sum[:])
+}
+
+func TestSampleFeedDecisions(t *testing.T) {
+	// Catches: a decision change on the sample feed, and a change that moves
+	// any decision (rules, FX, normalization) without a PolicyVersion bump.
+	if testing.Short() {
+		t.Skip("skipping slow real lingua test in short mode")
+	}
+	data, err := os.ReadFile(filepath.Join("testdata", "sample_decisions.json"))
+	if err != nil {
+		t.Fatalf("read sample_decisions.json: %v", err)
+	}
+	var golden sampleGolden
+	if err := json.Unmarshal(data, &golden); err != nil {
+		t.Fatalf("unmarshal sample_decisions.json: %v", err)
+	}
+
+	f, err := os.Open(filepath.Join("..", "..", "..", "data", "sample.json"))
+	if err != nil {
+		t.Fatalf("open sample feed: %v", err)
+	}
+	defer func() { _ = f.Close() }()
+
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, langdetect.New())
+	outcomes, quarantined, err := ingestion.Evaluate(f, "sample", engine)
+	if err != nil {
+		t.Fatalf("Evaluate() error = %v", err)
+	}
+	if len(quarantined) != 0 {
+		t.Errorf("len(quarantined) = %d, want 0", len(quarantined))
+	}
+	if len(outcomes) != len(golden.Decisions) {
+		t.Fatalf("len(outcomes) = %d, want %d", len(outcomes), len(golden.Decisions))
+	}
+
+	approved := 0
+	for i, o := range outcomes {
+		want := golden.Decisions[i]
+		got := make([]string, 0, len(o.Decision.Reasons))
+		for _, r := range o.Decision.Reasons {
+			got = append(got, string(r.Code))
+		}
+		sort.Strings(got)
+		wantReasons := append([]string{}, want.Reasons...)
+		sort.Strings(wantReasons)
+		if o.Decision.Approved() != want.Approved || !reflect.DeepEqual(got, wantReasons) {
+			t.Errorf("row %d (%q): approved=%v reasons=%v, want approved=%v reasons=%v", want.Index, want.Title, o.Decision.Approved(), got, want.Approved, wantReasons)
+		}
+		if o.Decision.Approved() {
+			approved++
+		}
+	}
+	if approved != 11 {
+		t.Errorf("approved = %d, want 11 of 20", approved)
+	}
+
+	fp := fingerprint(t, outcomes)
+	stored, ok := golden.Fingerprints[approval.PolicyVersion]
+	switch {
+	case !ok:
+		t.Errorf("PolicyVersion %s has no fingerprint; add %q", approval.PolicyVersion, fp)
+	case stored != fp:
+		t.Errorf("sample decisions changed without a PolicyVersion bump: bump approval.PolicyVersion and add a new fingerprint entry (%q), never edit an existing one", fp)
 	}
 }

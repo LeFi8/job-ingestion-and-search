@@ -1,4 +1,4 @@
--- name: InsertQuarantine :exec
+-- name: InsertQuarantine :execrows
 INSERT INTO quarantine (
   source_id,
   element_index,

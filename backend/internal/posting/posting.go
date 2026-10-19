@@ -5,27 +5,31 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// The JSON names are stored in postings.normalized and read by name in
+// storage/queries/postings.sql, so they must not follow Go renames.
 type Location struct {
-	City, Region string
-	Country      Country
+	City    string  `json:"City"`
+	Region  string  `json:"Region"`
+	Country Country `json:"Country"`
 }
 
 type Salary struct {
-	Amount        decimal.Decimal
-	Currency      Currency
-	Unit          PayUnit
-	CurrencyGuess bool
-	UnitGuess     bool
+	Amount        decimal.Decimal `json:"Amount"`
+	Currency      Currency        `json:"Currency"`
+	Unit          PayUnit         `json:"Unit"`
+	CurrencyGuess bool            `json:"CurrencyGuess"`
 }
 
 type Posting struct {
-	SourceID                    string
-	Title, Description, Company string
-	CompanyType                 CompanyType
-	Location                    *Location
-	Remote                      bool
-	EmploymentType              EmploymentType
-	Salary                      *Salary
-	PostedOn                    *civil.Date
-	DeclaredLanguage            Language
+	SourceID         string         `json:"SourceID"`
+	Title            string         `json:"Title"`
+	Description      string         `json:"Description"`
+	Company          string         `json:"Company"`
+	CompanyType      CompanyType    `json:"CompanyType"`
+	Location         *Location      `json:"Location"`
+	Remote           bool           `json:"Remote"`
+	EmploymentType   EmploymentType `json:"EmploymentType"`
+	Salary           *Salary        `json:"Salary"`
+	PostedOn         *civil.Date    `json:"PostedOn"`
+	DeclaredLanguage Language       `json:"DeclaredLanguage"`
 }

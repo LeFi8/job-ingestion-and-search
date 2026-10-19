@@ -166,7 +166,10 @@ func (e *env) ingest(t *testing.T, sourceID, input string) {
 		"Rejoignez notre équipe pour concevoir des modèles de machine learning avancés.": posting.French,
 		"Entwickeln Sie mobile Anwendungen für iOS und Android.":                         posting.German,
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine, err := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	if err != nil {
+		t.Fatalf("NewEngine() error = %v", err)
+	}
 	log := slog.New(slog.NewJSONHandler(io.Discard, nil))
 	if _, err := ingestion.Run(e.ctx, strings.NewReader(input), sourceID, time.Now().UTC(), engine, e.store, log); err != nil {
 		t.Fatalf("ingestion.Run() error = %v", err)

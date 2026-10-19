@@ -6,7 +6,7 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 )
 
-const PolicyVersion = "2026-10-13.1"
+const PolicyVersion = "2026-10-19.1"
 
 type MarketPolicy struct {
 	Name         string
@@ -17,20 +17,18 @@ type MarketPolicy struct {
 }
 
 type Policy struct {
-	Version       string
-	StaffingTypes map[posting.CompanyType]bool
-	Markets       []MarketPolicy
-	Fallback      MarketPolicy
+	Version string
+	Rules   []Rule
+	Markets []MarketPolicy
+	// RemoteAnywhere applies to a remote job that no entry in Markets matched.
+	RemoteAnywhere *MarketPolicy
+	Fallback       MarketPolicy
 }
 
 func InCountry(c posting.Country) func(p posting.Posting) bool {
 	return func(p posting.Posting) bool {
 		return p.Location != nil && p.Location.Country == c
 	}
-}
-
-func IsRemote(p posting.Posting) bool {
-	return p.Remote
 }
 
 func RemoteIn(c posting.Country) func(p posting.Posting) bool {
@@ -42,9 +40,7 @@ func RemoteIn(c posting.Country) func(p posting.Posting) bool {
 func DefaultPolicy() Policy {
 	return Policy{
 		Version: PolicyVersion,
-		StaffingTypes: map[posting.CompanyType]bool{
-			posting.StaffingFirm: true,
-		},
+		Rules:   DefaultRules(posting.StaffingFirm),
 		Markets: []MarketPolicy{
 			{
 				Name:         "US",
@@ -60,13 +56,12 @@ func DefaultPolicy() Policy {
 				MinHourlyUSD: decimal.RequireFromString("45"),
 				Languages:    []posting.Language{posting.English, posting.French},
 			},
-			{
-				Name:         "Remote-anywhere",
-				Matches:      IsRemote,
-				MinAnnualUSD: decimal.RequireFromString("100000"),
-				MinHourlyUSD: decimal.RequireFromString("45"),
-				Languages:    []posting.Language{posting.English},
-			},
+		},
+		RemoteAnywhere: &MarketPolicy{
+			Name:         "Remote-anywhere",
+			MinAnnualUSD: decimal.RequireFromString("100000"),
+			MinHourlyUSD: decimal.RequireFromString("45"),
+			Languages:    []posting.Language{posting.English},
 		},
 		Fallback: MarketPolicy{
 			Name:         "none",

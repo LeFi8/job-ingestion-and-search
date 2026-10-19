@@ -69,7 +69,14 @@ func (s *Salary) UnmarshalJSON(b []byte) error {
 			Currency string
 			Unit     string
 		}
-		if err := json.Unmarshal(b, &obj); err != nil || !isNumber(obj.Value) {
+		if err := json.Unmarshal(b, &obj); err != nil {
+			s.Invalid = string(b)
+			return nil
+		}
+		if len(obj.Value) == 0 || string(obj.Value) == "null" {
+			return nil
+		}
+		if !isNumber(obj.Value) {
 			s.Invalid = string(b)
 			return nil
 		}

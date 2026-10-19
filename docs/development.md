@@ -88,7 +88,7 @@ The Go linter config (`backend/.golangci.yml`) enables the `integration` build t
 integration test files are linted too. golangci-lint is fetched at its pinned version on first
 run. `sqlc`, `goose` and `oapi-codegen` are `tool` entries in `backend/go.mod` and run with
 `go tool <name>`; there is nothing to install separately. Lint and type errors are fixed in
-the code, never suppressed with `//nolint`, `eslint-disable` or `@ts-ignore`.
+the code, never suppressed with `//nolint`, `eslint-disable`, `@ts-ignore` or `squawk-ignore`.
 
 ## Generating code
 
@@ -107,7 +107,8 @@ edit and must pass the same lint and type checks as the rest of the code.
 ## Making changes
 
 **A migration.** Create the file with the goose command above (`-s` keeps the sequential
-numbering), fill in `-- +goose Up` and `-- +goose Down`, apply it with `mise run migrate`, and
+numbering), fill in `-- +goose Up` (delete the `Down` section; migrations are forward-only),
+start it with `SET lock_timeout` and `SET statement_timeout`, apply it with `mise run migrate`, and
 regenerate the query code. Lint it before pushing:
 `(cd backend && npm exec --yes --package=squawk-cli@2.66.0 -- squawk migrations/*.sql)`.
 Migrations are forward-only and run as their own step, never at application start, so a
@@ -127,10 +128,14 @@ npm --prefix frontend run gen:api
 npm exec --yes --package=@redocly/cli@2.57.0 -- redocly lint api/openapi.yaml
 ```
 
-**Approval rules.** Change `backend/internal/approval` and bump `PolicyVersion` in
-`backend/internal/approval/policy.go`. The version is part of each posting's content hash, so
-the next ingest of a feed re-evaluates every posting in it instead of skipping them as
-unchanged. Adding a market is a policy entry; see
+**Approval rules.** Each rule is a function in `backend/internal/approval/rules.go`, listed
+in order by `DefaultRules`. Bump `PolicyVersion` in `backend/internal/approval/policy.go` after
+any change that can move a decision: `internal/approval`, the FX table in `internal/fx`,
+`internal/ingestion/normalize` or `internal/langdetect`. The version is part of each posting's
+content hash, so the next ingest of a feed re-evaluates every posting in it instead of skipping
+them as unchanged. `TestSampleFeedDecisions` fails when the sample feed's decisions change
+without a bump; add the new version's fingerprint to
+`backend/internal/ingestion/testdata/sample_decisions.json` and never edit an existing one. Adding a market is a policy entry; see
 [adding the remote-UK market](../backend/README.md#adding-the-remote-uk-market).
 
 **The search mapping.** Mappings cannot change in place. Edit

@@ -51,19 +51,20 @@ func (f *fakeSaver) SaveOutcome(_ context.Context, r storage.PostingRecord) (boo
 	return true, nil
 }
 
-func (f *fakeSaver) Quarantine(_ context.Context, _ string, q raw.Quarantined) error {
+func (f *fakeSaver) Quarantine(_ context.Context, _ string, q raw.Quarantined) (bool, error) {
 	f.quarantined = append(f.quarantined, q)
-	return nil
+	return true, nil
 }
 
 var testDecidedAt = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 
-func testEngine() *approval.Engine {
+func testEngine(t *testing.T) *approval.Engine {
+	t.Helper()
 	detector := fakeDetector{
 		"Rejoignez notre équipe pour concevoir des modèles de machine learning avancés.": {lang: posting.French, reliable: true},
 		"Entwickeln Sie mobile Anwendungen für iOS und Android.":                         {lang: posting.German, reliable: true},
 	}
-	return approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	return newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 }
 
 func fixtureElements(t *testing.T) []json.RawMessage {
@@ -92,7 +93,7 @@ func runFeed(t *testing.T, input string, s ingestion.Saver, log *slog.Logger) (i
 	if log == nil {
 		log = slog.New(slog.NewJSONHandler(io.Discard, nil))
 	}
-	return ingestion.Run(context.Background(), strings.NewReader(input), "test-feed", testDecidedAt, testEngine(), s, log)
+	return ingestion.Run(context.Background(), strings.NewReader(input), "test-feed", testDecidedAt, testEngine(t), s, log)
 }
 
 func TestRunFixture(t *testing.T) {
@@ -378,5 +379,20 @@ func TestRunSalaryUSDAnnual(t *testing.T) {
 				t.Errorf("SalaryUSDAnnual = %v, want %s", rec.SalaryUSDAnnual, tt.want)
 			}
 		})
+	}
+}
+
+func TestRunLogsInvalidDate(t *testing.T) {
+	// Catches: an unparseable posting date silently becoming null with no trace.
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	input := feed(strings.Replace(validElement(""), `"posting_date":"2023-10-03"`, `"posting_date":"10/01/2023"`, 1))
+
+	if _, err := runFeed(t, input, newFakeSaver(), log); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	line := findLogLine(t, &buf, "job.date_invalid")
+	if line["index"] != float64(0) || line["value"] != "10/01/2023" {
+		t.Errorf("job.date_invalid = %v, want index 0 and value 10/01/2023", line)
 	}
 }

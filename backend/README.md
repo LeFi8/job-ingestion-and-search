@@ -16,8 +16,8 @@ handling and how to add a market. Setting up and running the stack is in
 A posting's identity is its source plus company, title, location and posting date, compared
 case- and whitespace-insensitively, with locations and dates compared after normalization.
 Re-ingesting the same feed is a no-op. An edited salary, description or other field updates
-the stored posting in place and re-runs approval. An edited title, location or posting date
-creates a new posting, and the old one stays as it was. Identity uses normalized locations
+the stored posting in place and re-runs approval. An edited company, title, location or
+posting date creates a new posting, and the old one stays as it was. Identity uses normalized locations
 and dates, so changing the country aliases, the US state list or date parsing changes the
 identity of the postings they affect in the same way.
 
@@ -93,7 +93,7 @@ The brief suggests `models`, `ingestion`, `approval` and `storage`. They map to:
 | `ingestion` | `internal/ingestion`                                | `Evaluate`, `Run` and the idempotency key                                                  | stdlib                                     |
 |             | `internal/ingestion/raw`                            | Feed decoding and quarantine of malformed records                                          | `encoding/json`                            |
 |             | `internal/ingestion/normalize`                      | Raw records to `posting.Posting` plus issues                                               | stdlib                                     |
-| `approval`  | `internal/approval`                                 | Gates, market policies, `Evaluate`                                                         | stdlib                                     |
+| `approval`  | `internal/approval`                                 | Rules, market policies, `Evaluate`                                                         | stdlib                                     |
 |             | `internal/fx`                                       | Static USD conversion rates                                                                | stdlib                                     |
 |             | `internal/langdetect`                               | Language detection adapter                                                                 | `lingua-go`                                |
 | `storage`   | `internal/storage`                                  | `Store`: posting upsert with outbox row, quarantine, outbox claiming and purge, job detail | Postgres, `pgx/v5`                         |
@@ -128,14 +128,15 @@ Not built: streaming decode for very large feeds. The whole file is read into me
 
 ## Adding the remote-UK market
 
-Add one entry to `DefaultPolicy().Markets` in `internal/approval/policy.go`, **before**
-`Remote-anywhere`. Markets are matched in order and the first match wins, so placed after it
-the entry never matches.
+Add one entry to `DefaultPolicy().Markets` in `internal/approval/policy.go`. Every entry in
+`Markets` is tried before the `RemoteAnywhere` catch-all, so a remote UK job uses the new entry.
 
 ```go
 {Name: "Remote-UK", Matches: RemoteIn(posting.Country("GB")), MinAnnualUSD: decimal.RequireFromString("90000"), MinHourlyUSD: decimal.RequireFromString("45"), Languages: []posting.Language{posting.English}},
 ```
 
-Then bump `PolicyVersion` in the same file and re-ingest the feed (`mise run seed`). The stored
+Then bump `PolicyVersion` in the same file, add its fingerprint to
+`internal/ingestion/testdata/sample_decisions.json` (the failing `TestSampleFeedDecisions`
+prints it), and re-ingest the feed (`mise run seed`). The stored
 content hash includes the policy version, so every posting is re-evaluated and re-enqueued,
 and the worker reindexes them.

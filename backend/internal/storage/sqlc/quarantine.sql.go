@@ -9,7 +9,7 @@ import (
 	"context"
 )
 
-const insertQuarantine = `-- name: InsertQuarantine :exec
+const insertQuarantine = `-- name: InsertQuarantine :execrows
 INSERT INTO quarantine (
   source_id,
   element_index,
@@ -23,17 +23,20 @@ ON CONFLICT (source_id, raw_hash) DO NOTHING
 
 type InsertQuarantineParams struct {
 	SourceID     string `json:"source_id"`
-	ElementIndex int32  `json:"element_index"`
+	ElementIndex int64  `json:"element_index"`
 	Raw          []byte `json:"raw"`
 	Error        string `json:"error"`
 }
 
-func (q *Queries) InsertQuarantine(ctx context.Context, arg InsertQuarantineParams) error {
-	_, err := q.db.Exec(ctx, insertQuarantine,
+func (q *Queries) InsertQuarantine(ctx context.Context, arg InsertQuarantineParams) (int64, error) {
+	result, err := q.db.Exec(ctx, insertQuarantine,
 		arg.SourceID,
 		arg.ElementIndex,
 		arg.Raw,
 		arg.Error,
 	)
-	return err
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
 }

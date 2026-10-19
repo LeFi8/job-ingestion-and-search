@@ -10,6 +10,14 @@ const (
 	PLN Currency = "PLN"
 )
 
+func (c Currency) Known() bool {
+	switch c {
+	case USD, CAD, GBP, EUR, PLN:
+		return true
+	}
+	return false
+}
+
 type Language string
 
 const (

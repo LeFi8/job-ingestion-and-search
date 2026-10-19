@@ -238,18 +238,18 @@ func TestQuarantine(t *testing.T) {
 		Err:   errors.New("unexpected end of JSON input"),
 	}
 
-	if err := testStore.Quarantine(ctx, "test-feed", q); err != nil {
-		t.Fatalf("Quarantine() error = %v", err)
+	if inserted, err := testStore.Quarantine(ctx, "test-feed", q); err != nil || !inserted {
+		t.Fatalf("Quarantine() = %v, %v; want inserted", inserted, err)
 	}
 
-	var elementIndex int32
+	var elementIndex int64
 	var gotRaw []byte
 	var gotErr string
 	err := testStore.pool.QueryRow(ctx, "SELECT element_index, raw, error FROM quarantine WHERE source_id = $1", "test-feed").Scan(&elementIndex, &gotRaw, &gotErr)
 	if err != nil {
 		t.Fatalf("read quarantine row: %v", err)
 	}
-	if elementIndex != int32(q.Index) {
+	if elementIndex != int64(q.Index) {
 		t.Errorf("element_index = %d, want %d", elementIndex, q.Index)
 	}
 	if !bytes.Equal(gotRaw, element) {
@@ -259,13 +259,13 @@ func TestQuarantine(t *testing.T) {
 		t.Errorf("error = %q, want %q", gotErr, q.Err.Error())
 	}
 
-	if err := testStore.Quarantine(ctx, "test-feed", q); err != nil {
-		t.Fatalf("second Quarantine() error = %v", err)
+	if inserted, err := testStore.Quarantine(ctx, "test-feed", q); err != nil || inserted {
+		t.Fatalf("second Quarantine() = %v, %v; want not inserted", inserted, err)
 	}
 	moved := q
 	moved.Index = 7
-	if err := testStore.Quarantine(ctx, "test-feed", moved); err != nil {
-		t.Fatalf("moved Quarantine() error = %v", err)
+	if inserted, err := testStore.Quarantine(ctx, "test-feed", moved); err != nil || inserted {
+		t.Fatalf("moved Quarantine() = %v, %v; want not inserted", inserted, err)
 	}
 	if got := countRows(t, ctx, "quarantine"); got != 1 {
 		t.Errorf("quarantine rows = %d, want 1", got)

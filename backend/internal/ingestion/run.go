@@ -13,12 +13,13 @@ import (
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/approval"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/ingestion/raw"
+	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/storage"
 )
 
 type Saver interface {
 	SaveOutcome(ctx context.Context, r storage.PostingRecord) (changed bool, err error)
-	Quarantine(ctx context.Context, sourceID string, q raw.Quarantined) error
+	Quarantine(ctx context.Context, sourceID string, q raw.Quarantined) (inserted bool, err error)
 }
 
 type Summary struct{ Approved, Rejected, Unchanged, Quarantined, Invalid, Duplicate int }
@@ -31,8 +32,13 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 
 	var sum Summary
 	for _, q := range quarantined {
-		if err := s.Quarantine(ctx, sourceID, q); err != nil {
+		inserted, err := s.Quarantine(ctx, sourceID, q)
+		if err != nil {
 			return sum, fmt.Errorf("quarantine element %d: %w", q.Index, err)
+		}
+		if !inserted {
+			sum.Unchanged++
+			continue
 		}
 		sum.Quarantined++
 		log.Warn("feed.quarantined", "index", q.Index, "error", q.Err.Error())
@@ -40,6 +46,11 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 
 	firstIndex := make(map[string]int, len(outcomes))
 	for _, o := range outcomes {
+		for _, issue := range o.Issues {
+			if issue.Code == posting.DateInvalid {
+				log.Warn("job.date_invalid", "index", o.Index, "value", issue.Detail)
+			}
+		}
 		rec, err := newRecord(sourceID, decidedAt, o)
 		if err != nil {
 			return sum, fmt.Errorf("build record for element %d: %w", o.Index, err)
@@ -131,16 +142,11 @@ func newRecord(sourceID string, decidedAt time.Time, o Outcome) (storage.Posting
 }
 
 func salaryUSD(d approval.Decision) *decimal.Decimal {
-	switch {
-	case d.Job != nil:
-		annual := d.Job.AnnualUSD()
-		return &annual
-	case d.FX != nil:
-		annual := d.FX.AnnualUSD
-		return &annual
-	default:
+	if d.FX == nil {
 		return nil
 	}
+	annual := d.FX.AnnualUSD
+	return &annual
 }
 
 func reasonCodes(reasons []approval.Reason) []string {

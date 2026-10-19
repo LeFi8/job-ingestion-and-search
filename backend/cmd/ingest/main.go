@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"log/slog"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/approval"
@@ -37,8 +39,14 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	if *reindex {
-		reindexAll(cfg.DatabaseURL)
+		err := reindexAll(ctx, cfg.DatabaseURL)
+		stop()
+		if err != nil {
+			slog.Error("reindex failed", "error", err)
+			os.Exit(1)
+		}
 		return
 	}
 	path := flag.Arg(0)
@@ -47,7 +55,8 @@ func main() {
 		sourceID = strings.TrimSuffix(filepath.Base(path), filepath.Ext(path))
 	}
 
-	sum, err := run(context.Background(), cfg.DatabaseURL, path, sourceID)
+	sum, err := run(ctx, cfg.DatabaseURL, path, sourceID)
+	stop()
 	counts := []any{
 		"source", sourceID,
 		"approved", sum.Approved,
@@ -68,22 +77,21 @@ func main() {
 	}
 }
 
-func reindexAll(dbURL string) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
+func reindexAll(ctx context.Context, dbURL string) error {
+	ctx, cancel := context.WithTimeout(ctx, 5*time.Minute)
 	defer cancel()
 	store, err := storage.Open(ctx, dbURL)
 	if err != nil {
-		slog.Error("reindex failed", "error", fmt.Errorf("open store: %w", err))
-		os.Exit(1)
+		return fmt.Errorf("open store: %w", err)
 	}
 	defer store.Close()
 
 	n, err := store.EnqueueAll(ctx)
 	if err != nil {
-		slog.Error("reindex failed", "error", err)
-		os.Exit(1)
+		return err
 	}
 	slog.Info("reindex enqueued", "enqueued", n)
+	return nil
 }
 
 func run(ctx context.Context, dbURL, path, sourceID string) (ingestion.Summary, error) {
@@ -101,6 +109,9 @@ func run(ctx context.Context, dbURL, path, sourceID string) (ingestion.Summary, 
 	}
 	defer store.Close()
 
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, langdetect.New(langdetect.MinRelativeDistance))
+	engine, err := approval.NewEngine(approval.DefaultPolicy(), fx.Default, langdetect.New())
+	if err != nil {
+		return ingestion.Summary{}, fmt.Errorf("build approval engine: %w", err)
+	}
 	return ingestion.Run(ctx, f, sourceID, time.Now().UTC(), engine, store, slog.Default())
 }

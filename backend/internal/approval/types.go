@@ -29,7 +29,6 @@ type Reason struct {
 
 type FXApplied struct {
 	Rate      decimal.Decimal
-	AmountUSD decimal.Decimal
 	AnnualUSD decimal.Decimal
 	Inferred  bool
 }
@@ -43,11 +42,12 @@ type LanguageDetector interface {
 }
 
 type Decision struct {
-	Job           *Job
+	approved      bool
 	Reasons       []Reason
 	Market        string
 	FX            *FXApplied
+	Language      posting.Language
 	PolicyVersion string
 }
 
-func (d Decision) Approved() bool { return d.Job != nil }
+func (d Decision) Approved() bool { return d.approved }
