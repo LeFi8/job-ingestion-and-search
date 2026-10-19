@@ -31,7 +31,15 @@ func Run(ctx context.Context, r io.Reader, sourceID string, decidedAt time.Time,
 	}
 
 	var sum Summary
+	firstQuarantined := make(map[string]int, len(quarantined))
 	for _, q := range quarantined {
+		if first, dup := firstQuarantined[string(q.Raw)]; dup {
+			sum.Duplicate++
+			log.Warn("feed.duplicate_element", "index", q.Index, "first_index", first)
+			continue
+		}
+		firstQuarantined[string(q.Raw)] = q.Index
+
 		inserted, err := s.Quarantine(ctx, sourceID, q)
 		if err != nil {
 			return sum, fmt.Errorf("quarantine element %d: %w", q.Index, err)

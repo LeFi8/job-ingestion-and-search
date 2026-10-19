@@ -12,7 +12,7 @@ import (
 )
 
 // keyVersion changes every key, and so does any change to normalization the key
-// reads (country aliases, US states, date parsing); either one duplicates
+// reads (country aliases, US states, location segments, date parsing); either one duplicates
 // stored postings unless existing rows are re-keyed in the same change.
 const keyVersion = "k1"
 

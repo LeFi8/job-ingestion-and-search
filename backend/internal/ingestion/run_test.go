@@ -52,6 +52,11 @@ func (f *fakeSaver) SaveOutcome(_ context.Context, r storage.PostingRecord) (boo
 }
 
 func (f *fakeSaver) Quarantine(_ context.Context, _ string, q raw.Quarantined) (bool, error) {
+	for _, existing := range f.quarantined {
+		if bytes.Equal(existing.Raw, q.Raw) {
+			return false, nil
+		}
+	}
 	f.quarantined = append(f.quarantined, q)
 	return true, nil
 }
@@ -189,6 +194,25 @@ func TestRunMalformed(t *testing.T) {
 	}
 	if len(s.records) != 2 {
 		t.Errorf("len(records) = %d, want 2", len(s.records))
+	}
+}
+
+func TestRunQuarantineRepeatInFeed(t *testing.T) {
+	// Catches: a repeated bad element in one feed reported as unchanged and never logged.
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	input := feed(`"same bad"`, validElement(""), `"same bad"`)
+
+	got, err := runFeed(t, input, newFakeSaver(), log)
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got.Quarantined != 1 || got.Duplicate != 1 || got.Unchanged != 0 {
+		t.Errorf("Run() = %+v, want Quarantined 1, Duplicate 1, Unchanged 0", got)
+	}
+	line := findLogLine(t, &buf, "feed.duplicate_element")
+	if line["index"] != float64(2) || line["first_index"] != float64(0) {
+		t.Errorf("feed.duplicate_element = %v, want index 2 and first_index 0", line)
 	}
 }
 

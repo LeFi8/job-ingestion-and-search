@@ -14,13 +14,16 @@ gap is closed and what is still open, followed by the stack and design choices b
 - **An explicit unit must fit the amount.** `hourly`, `hour`, `hr`, `h`, `per hour` and
   `annual`, `annually`, `yearly`, `year`, `yr`, `per year`, `per annum` are understood. An
   explicit hourly amount of 1,000 or more, or an explicit annual amount below 1,000, is rejected
-  `salary_unit_ambiguous` (detail e.g. `150000 hourly`).
+  `salary_unit_ambiguous` (detail e.g. `150000 hourly`). Any other unit (e.g. `monthly`) is
+  rejected `salary_unit_ambiguous` too, with the amount as the detail.
 - **An explicit currency must be one we convert** (USD, CAD, GBP, EUR, PLN). Anything else is
   rejected `salary_currency_unknown` with the code as the detail. A salary object with no or
   `null` `value` is `salary_missing`; a quoted number is `salary_invalid`.
-- **Salaries are decided at stored precision.** Amounts and converted USD values are rounded to
-  cents (half away from zero, as Postgres `numeric` does) before the comparison, so a stored
-  approved salary is always above the threshold.
+- **Salaries are decided at stored precision.** The amount is rounded to cents (half away from
+  zero, as Postgres `numeric` does) before it is converted, and the converted USD value is
+  rounded again before the comparison. The decision is about the salary as stored, so a stored
+  approved salary is always above the threshold: 34.0949 GBP/h is stored as 34.09 GBP, which is
+  44.9988 USD/h, or 45.00 after rounding, and is rejected.
 - **Hourly pay is compared as hourly.** The thresholds are `> $45/h` and `> $100,000` a year.
   Hourly pay is never annualised for the decision (45 × 2080 = 93,600 would not line up with
   100,000); annualising is only used as a sort key.
@@ -160,8 +163,8 @@ Elasticsearch.
 | Sort                    | Salary by its USD equivalent, date in both directions; missing values last                        |
 | Combined state          | Query, country, sort, page and job in the URL; reload and back/forward restore the view           |
 | Loading                 | Skeletons; the previous results stay visible while the next page or query loads                   |
-| Empty                   | "No jobs match 'xyz' in Canada" with a "Clear filters" button                                     |
-| Error                   | The problem `detail` with Retry; a 4xx is not retried, a 5xx is retried twice                     |
+| Empty                   | "No jobs match 'xyz' in Canada", with a "Clear filters" button when a query or country is set     |
+| Error                   | A failed first load shows the problem `detail` with Retry (a 4xx is not retried, a 5xx is retried twice); a failed refetch keeps the previous results |
 | Job no longer available | A selected job that is not approved (404) says so and links back to the results                   |
 | Pagination              | Resets to page 1 on a new query or filter; a page past the end links to the last page             |
 | Accessibility           | Labelled search input and select, result count announced with `aria-live`, results are links      |

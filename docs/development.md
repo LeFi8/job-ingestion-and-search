@@ -113,7 +113,8 @@ regenerate the query code. Lint it before pushing:
 `(cd backend && npm exec --yes --package=squawk-cli@2.66.0 -- squawk migrations/*.sql)`.
 Migrations are forward-only and run as their own step, never at application start, so a
 breaking change goes in stages: add the new shape, move the code over, then drop the old one in
-a later migration.
+a later migration. Nothing is released yet, so `00001_init.sql` is still edited in place; after
+pulling a change to it, delete `./volumes/postgres` and run `mise run migrate` again.
 
 **A query.** Edit `backend/internal/storage/queries/*.sql`, run
 `go -C backend tool sqlc generate`, and check it with

@@ -18,11 +18,14 @@ case- and whitespace-insensitively, with locations and dates compared after norm
 Re-ingesting the same feed is a no-op. An edited salary, description or other field updates
 the stored posting in place and re-runs approval. An edited company, title, location or
 posting date creates a new posting, and the old one stays as it was. Identity uses normalized locations
-and dates, so changing the country aliases, the US state list or date parsing changes the
-identity of the postings they affect in the same way.
+and dates, so changing the country aliases, the US state list, location segment parsing (a
+`Remote` segment) or date parsing changes the identity of the postings they affect in the same
+way.
 
 If one feed contains several elements with the same identity, the first one is stored and the
-rest are logged as `job.duplicate_key` and counted as `duplicate`.
+rest are logged as `job.duplicate_key` and counted as `duplicate`. A quarantined element that
+repeats byte for byte is stored once; the repeats are logged as `feed.duplicate_element` and
+counted as `duplicate`.
 
 The source defaults to the file name without its extension. Pass `--source=<id>` when the
 file name changes between runs (for example dated exports), or every run creates a new set
@@ -120,7 +123,7 @@ The feed is scraped data, so one bad record never stops the rest:
 - A non-object element, or a record with a wrong-typed field, is quarantined with its index
   and raw bytes; the other records continue.
 - A non-numeric salary still ingests and is rejected with `salary_invalid`, as is any amount
-  above 10,000,000 (`MaxSalaryAmount`).
+  that is not positive at cent precision or is above 10,000,000 (`MaxSalaryAmount`).
 - A file that is not one valid JSON array fails as a whole.
 - NUL characters are dropped from text fields; the original record is kept as `bytea` in `raw`.
 
