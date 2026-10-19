@@ -2,6 +2,7 @@ package normalize
 
 import (
 	"strings"
+	"time"
 
 	"cloud.google.com/go/civil"
 
@@ -39,23 +40,29 @@ func parseDate(s string) (*civil.Date, []posting.Issue) {
 	if s == "" {
 		return nil, nil
 	}
-	d, err := civil.ParseDate(s)
-	if err != nil {
-		return nil, []posting.Issue{{Code: posting.DateInvalid, Detail: s}}
+	if d, err := civil.ParseDate(s); err == nil {
+		return &d, nil
 	}
-	return &d, nil
+	if t, err := time.Parse(time.RFC3339, s); err == nil {
+		d := civil.DateOf(t)
+		return &d, nil
+	}
+	return nil, []posting.Issue{{Code: posting.DateInvalid, Detail: s}}
+}
+
+var declaredLanguages = map[string]posting.Language{
+	"english": posting.English, "en": posting.English,
+	"french": posting.French, "fr": posting.French,
+	"german": posting.German, "de": posting.German,
+	"polish": posting.Polish, "pl": posting.Polish,
+	"spanish": posting.Spanish, "es": posting.Spanish,
+	"italian": posting.Italian, "it": posting.Italian,
+	"portuguese": posting.Portuguese, "pt": posting.Portuguese,
+	"dutch": posting.Dutch, "nl": posting.Dutch,
 }
 
 func parseLanguage(s string) posting.Language {
-	switch strings.ToLower(cleanText(s)) {
-	case "english", "en":
-		return posting.English
-	case "french", "fr":
-		return posting.French
-	case "german", "de":
-		return posting.German
-	case "polish", "pl":
-		return posting.Polish
-	}
-	return ""
+	tag, _, _ := strings.Cut(strings.ToLower(cleanText(s)), "-")
+	tag, _, _ = strings.Cut(tag, "_")
+	return declaredLanguages[tag]
 }
