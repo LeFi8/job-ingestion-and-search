@@ -50,6 +50,9 @@ func parseLocationText(text string) (posting.Location, bool) {
 			segments, remote = segments[:len(segments)-1], true
 		}
 	}
+	if remote && len(segments) == 1 && usStates[strings.ToUpper(segments[0])] {
+		return posting.Location{Region: strings.ToUpper(segments[0]), Country: "US"}, true
+	}
 	return parseLocationSegments(segments), remote
 }
 

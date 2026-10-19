@@ -22,6 +22,8 @@ func TestNormalizeLocation(t *testing.T) {
 		{"DC", raw.Location{City: "Washington", State: "DC", Country: "USA"}, false, &posting.Location{City: "Washington", Region: "DC", Country: "US"}, false},
 		{"remote prefix with country", raw.Location{Text: "Remote, USA"}, false, &posting.Location{Country: "US"}, true},
 		{"remote suffix with city", raw.Location{Text: "Toronto, Remote"}, false, &posting.Location{City: "Toronto"}, true},
+		{"remote prefix with US state", raw.Location{Text: "Remote, NY"}, false, &posting.Location{Region: "NY", Country: "US"}, true},
+		{"remote prefix with CA is California", raw.Location{Text: "Remote, CA"}, false, &posting.Location{Region: "CA", Country: "US"}, true},
 		{"remote dash without comma stays text", raw.Location{Text: "Remote - Canada"}, false, &posting.Location{City: "Remote - Canada"}, false},
 		{"three segments lowercase region", raw.Location{Text: "Austin, tx, USA"}, false, &posting.Location{City: "Austin", Region: "TX", Country: "US"}, false},
 		{"three segments", raw.Location{Text: "New York, NY, USA"}, false, &posting.Location{City: "New York", Region: "NY", Country: "US"}, false},

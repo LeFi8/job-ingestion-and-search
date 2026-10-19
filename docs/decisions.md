@@ -49,7 +49,8 @@ gap is closed and what is still open, followed by the stack and design choices b
 - **Declared languages** are read by English name or ISO code for all eight detected languages,
   ignoring a region subtag (`en-US`, `pt_BR`).
 - **"Remote" as a location segment** (`"Remote, USA"`, `"Toronto, Remote"`) marks the job
-  remote and is dropped from the location.
+  remote and is dropped from the location. A lone US state code left after it (`"Remote, NY"`,
+  `"Remote, CA"`) is that state.
 - **Every failing rule is reported,** not only the first, so a rejection explains itself.
 - **The remote-UK market from the brief's future hint is one policy entry.** See
   [Adding the remote-UK market](../backend/README.md#adding-the-remote-uk-market).
