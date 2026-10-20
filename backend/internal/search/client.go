@@ -1,14 +1,13 @@
 package search
 
 import (
-	"bytes"
 	"context"
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 
 	"github.com/elastic/go-elasticsearch/v9"
+	"github.com/elastic/go-elasticsearch/v9/typedapi/indices/create"
 	"github.com/elastic/go-elasticsearch/v9/typedapi/types"
 )
 
@@ -33,28 +32,24 @@ func New(url string) (*Client, error) {
 }
 
 func (c *Client) EnsureIndex(ctx context.Context) error {
-	body, err := createIndexBody()
+	req, err := createIndexRequest()
 	if err != nil {
 		return err
 	}
-	_, err = c.es.Indices.Create(indexName).Raw(bytes.NewReader(body)).Do(ctx)
+	_, err = c.es.Indices.Create(indexName).Request(req).Do(ctx)
 	if err == nil || isAlreadyExists(err) {
 		return nil
 	}
 	return fmt.Errorf("create index %s: %w", indexName, err)
 }
 
-func createIndexBody() ([]byte, error) {
-	var body map[string]json.RawMessage
-	if err := json.Unmarshal(mappingJSON, &body); err != nil {
+func createIndexRequest() (*create.Request, error) {
+	req, err := create.NewRequest().FromJSON(string(mappingJSON))
+	if err != nil {
 		return nil, fmt.Errorf("decode embedded mapping: %w", err)
 	}
-	body["aliases"] = json.RawMessage(`{"` + aliasName + `":{}}`)
-	out, err := json.Marshal(body)
-	if err != nil {
-		return nil, fmt.Errorf("encode index body: %w", err)
-	}
-	return out, nil
+	req.Aliases = map[string]types.Alias{aliasName: {}}
+	return req, nil
 }
 
 func isAlreadyExists(err error) bool {
