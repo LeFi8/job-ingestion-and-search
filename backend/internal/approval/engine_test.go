@@ -442,6 +442,40 @@ func TestMarkets(t *testing.T) {
 			t.Errorf("missing SalaryBelow in %+v", decDefault.Reasons)
 		}
 	})
+
+	t.Run("UK-remote at exactly 90k USD needs the documented 89999.99 minimum", func(t *testing.T) {
+		// Catches: the README's "90k or more" market rejecting exactly 90,000 USD.
+		p := validPosting()
+		p.Remote = true
+		p.Location = &posting.Location{City: "London", Country: posting.Country("GB")}
+		p.Salary = &posting.Salary{
+			Amount:   decimal.RequireFromString("72000"), // 72,000 * 1.25 = 90,000.00 USD
+			Currency: posting.GBP,
+			Unit:     posting.Annual,
+		}
+		p.Description = "English text"
+
+		for _, tt := range []struct {
+			minAnnual    string
+			wantApproved bool
+		}{
+			{"89999.99", true},
+			{"90000", false},
+		} {
+			policy := approval.DefaultPolicy()
+			policy.Markets = append(policy.Markets, approval.MarketPolicy{
+				Name:         "Remote-UK",
+				Matches:      approval.RemoteIn(posting.Country("GB")),
+				MinAnnualUSD: decimal.RequireFromString(tt.minAnnual),
+				MinHourlyUSD: decimal.RequireFromString("45"),
+				Languages:    []posting.Language{posting.English},
+			})
+			eng := newEngine(t, policy, fakeFX{posting.GBP: decimal.RequireFromString("1.25")}, detector)
+			if dec := eng.Evaluate(p, nil); dec.Approved() != tt.wantApproved {
+				t.Errorf("MinAnnualUSD %s: approved = %v, want %v (%+v)", tt.minAnnual, dec.Approved(), tt.wantApproved, dec.Reasons)
+			}
+		}
+	})
 }
 
 func TestNormalizationIssues(t *testing.T) {

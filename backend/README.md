@@ -27,6 +27,9 @@ rest are logged as `job.duplicate_key` and counted as `duplicate`. A quarantined
 repeats byte for byte is stored once; the repeats are logged as `feed.duplicate_element` and
 counted as `duplicate`.
 
+Each new or changed rejection is logged as `job.rejected` with its reason codes, alongside the
+`reasons` stored on the posting. Re-ingesting an unchanged rejection does not log it again.
+
 The source defaults to the file name without its extension. Pass `--source=<id>` when the
 file name changes between runs (for example dated exports), or every run creates a new set
 of postings.
@@ -133,9 +136,11 @@ Not built: streaming decode for very large feeds. The whole file is read into me
 
 Add one entry to `DefaultPolicy().Markets` in `internal/approval/policy.go`. Every entry in
 `Markets` is tried before the `RemoteAnywhere` catch-all, so a remote UK job uses the new entry.
+Thresholds are exclusive and salaries are decided in cents, so a minimum of 89,999.99 approves
+the brief's "90k USD or more".
 
 ```go
-{Name: "Remote-UK", Matches: RemoteIn(posting.Country("GB")), MinAnnualUSD: decimal.RequireFromString("90000"), MinHourlyUSD: decimal.RequireFromString("45"), Languages: []posting.Language{posting.English}},
+{Name: "Remote-UK", Matches: RemoteIn(posting.Country("GB")), MinAnnualUSD: decimal.RequireFromString("89999.99"), MinHourlyUSD: decimal.RequireFromString("45"), Languages: []posting.Language{posting.English}},
 ```
 
 Then bump `PolicyVersion` in the same file, add its fingerprint to

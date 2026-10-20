@@ -67,12 +67,18 @@ rather than guessed silently.
    This decides Data Scientist and Project Manager: read as USD, Data Scientist is approved and
    Project Manager is rejected.
 2. **Do consulting agencies, recruiters and executive search firms count as staffing firms?**
-   Consulting agencies do not. The set is configurable.
+   Consulting agencies do not. A company type that is missing or not one of `Direct Employer`,
+   `Staffing Firm` and `Consulting Agency` (e.g. `Recruitment Agency`) is `unknown` and is not
+   excluded, so a posting is not rejected only because the field is absent or worded differently.
 3. **Are fixed exchange rates acceptable?** Yes, for this exercise. With live rates,
    re-evaluating stored postings should be a deliberate operator action, not a side effect of
    a rate moving (see the [production path](architecture.md#production-path)).
 4. **Is a bilingual Canadian description acceptable if its dominant language is English or
    French?** Yes.
+5. **What are "both feeds"?** The brief ships one feed (`data/sample.json`) that mixes two record
+   shapes: a location object or a `"City, State, Country"` string, and a salary object or a bare
+   number. Both shapes parse, and no sample record is quarantined (`TestSampleFeedDecisions`).
+   Another feed is ingested the same way, with its own `--source`.
 
 ## Tech stack
 
