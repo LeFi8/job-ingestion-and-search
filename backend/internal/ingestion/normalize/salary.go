@@ -14,9 +14,11 @@ import (
 const MaxSalaryAmount = 10_000_000
 
 const (
-	maxExponent = 10
-	hourlyBelow = 1000
-	annualFrom  = 20000
+	// storedDecimals matches salary_amount numeric(14,2).
+	storedDecimals = 2
+	maxExponent    = 10
+	hourlyBelow    = 1000
+	annualFrom     = 20000
 )
 
 var maxSalary = decimal.NewFromInt(MaxSalaryAmount)
@@ -36,15 +38,21 @@ func normalizeSalary(rs raw.Salary, loc *posting.Location) (*posting.Salary, []p
 		!amount.IsPositive() || amount.GreaterThan(maxSalary) {
 		return nil, []posting.Issue{invalidSalary(rs.Value.String())}
 	}
+	if amount = amount.Round(storedDecimals); !amount.IsPositive() {
+		return nil, []posting.Issue{invalidSalary(rs.Value.String())}
+	}
 
 	var issues []posting.Issue
-	unit, unitGuess, unitOK := resolveUnit(amount, rs.Unit)
-	if !unitOK {
+	unit, unitOK := resolveUnit(amount, rs.Unit)
+	switch {
+	case !unitOK:
 		issues = append(issues, posting.Issue{Code: posting.SalaryUnitAmbiguous, Detail: cleanText(rs.Value.String())})
+	case !plausibleForUnit(amount, unit):
+		issues = append(issues, posting.Issue{Code: posting.SalaryUnitAmbiguous, Detail: cleanText(rs.Value.String()) + " " + string(unit)})
 	}
 	currency, currencyGuess, currencyOK := resolveCurrency(rs.Currency, loc)
 	if !currencyOK {
-		issues = append(issues, posting.Issue{Code: posting.SalaryCurrencyUnknown})
+		issues = append(issues, posting.Issue{Code: posting.SalaryCurrencyUnknown, Detail: string(currency)})
 	}
 	if len(issues) > 0 {
 		return nil, issues
@@ -54,7 +62,6 @@ func normalizeSalary(rs raw.Salary, loc *posting.Location) (*posting.Salary, []p
 		Currency:      currency,
 		Unit:          unit,
 		CurrencyGuess: currencyGuess,
-		UnitGuess:     unitGuess,
 	}, nil
 }
 
@@ -62,28 +69,38 @@ func invalidSalary(text string) posting.Issue {
 	return posting.Issue{Code: posting.SalaryInvalid, Detail: cleanText(text)}
 }
 
-func resolveUnit(amount decimal.Decimal, unit string) (posting.PayUnit, bool, bool) {
+func resolveUnit(amount decimal.Decimal, unit string) (posting.PayUnit, bool) {
 	if unit = strings.ToLower(cleanText(unit)); unit != "" {
 		switch unit {
-		case "hourly", "hour", "hr":
-			return posting.Hourly, false, true
-		case "annual", "yearly", "year":
-			return posting.Annual, false, true
+		case "hourly", "hour", "hr", "h", "per hour":
+			return posting.Hourly, true
+		case "annual", "annually", "yearly", "year", "yr", "per year", "per annum":
+			return posting.Annual, true
 		}
-		return "", false, false
+		return "", false
 	}
 	switch {
 	case amount.LessThan(decimal.NewFromInt(hourlyBelow)):
-		return posting.Hourly, true, true
+		return posting.Hourly, true
 	case amount.GreaterThanOrEqual(decimal.NewFromInt(annualFrom)):
-		return posting.Annual, true, true
+		return posting.Annual, true
 	}
-	return "", true, false
+	return "", false
+}
+
+// plausibleForUnit rejects an explicit unit that contradicts the amount, using
+// the same boundary that decides a bare amount's unit.
+func plausibleForUnit(amount decimal.Decimal, unit posting.PayUnit) bool {
+	if unit == posting.Hourly {
+		return amount.LessThan(decimal.NewFromInt(hourlyBelow))
+	}
+	return amount.GreaterThanOrEqual(decimal.NewFromInt(hourlyBelow))
 }
 
 func resolveCurrency(currency string, loc *posting.Location) (posting.Currency, bool, bool) {
 	if currency = strings.ToUpper(cleanText(currency)); currency != "" {
-		return posting.Currency(currency), false, true
+		c := posting.Currency(currency)
+		return c, false, c.Known()
 	}
 	if loc == nil {
 		return "", true, false

@@ -2,9 +2,9 @@ package approval_test
 
 import (
 	"errors"
+	"reflect"
 	"testing"
 
-	"cloud.google.com/go/civil"
 	"github.com/shopspring/decimal"
 
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/approval"
@@ -57,6 +57,15 @@ func validPosting() posting.Posting {
 	}
 }
 
+func newEngine(t *testing.T, p approval.Policy, rates approval.FXRates, lang approval.LanguageDetector) *approval.Engine {
+	t.Helper()
+	engine, err := approval.NewEngine(p, rates, lang)
+	if err != nil {
+		t.Fatalf("NewEngine() error = %v", err)
+	}
+	return engine
+}
+
 func hasReason(reasons []approval.Reason, code approval.ReasonCode) bool {
 	for _, r := range reasons {
 		if r.Code == code {
@@ -71,7 +80,7 @@ func TestThresholdBoundaries(t *testing.T) {
 	detector := fakeDetector{
 		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	tests := []struct {
 		name         string
@@ -130,7 +139,7 @@ func TestHourlyNotAnnualised(t *testing.T) {
 	detector := fakeDetector{
 		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	p := validPosting()
 	p.Salary.Amount = decimal.RequireFromString("46")
@@ -142,8 +151,8 @@ func TestHourlyNotAnnualised(t *testing.T) {
 	}
 
 	wantSortKey := decimal.RequireFromString("95680") // 46 * 2080
-	if !dec.Job.AnnualUSD().Equal(wantSortKey) {
-		t.Errorf("Job.AnnualUSD() = %s, want %s", dec.Job.AnnualUSD(), wantSortKey)
+	if !dec.FX.AnnualUSD.Equal(wantSortKey) {
+		t.Errorf("FX.AnnualUSD = %s, want %s", dec.FX.AnnualUSD, wantSortKey)
 	}
 }
 
@@ -152,7 +161,7 @@ func TestAllReasonsCollected(t *testing.T) {
 	detector := fakeDetector{
 		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	p := validPosting()
 	p.Title = "   "
@@ -188,7 +197,7 @@ func TestWhitespaceTitle(t *testing.T) {
 	detector := fakeDetector{
 		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	p := validPosting()
 	p.Title = "\t \n "
@@ -208,18 +217,18 @@ func TestConsultingIsNotStaffing(t *testing.T) {
 	p := validPosting()
 	p.CompanyType = posting.ConsultingAgency
 
-	defaultEngine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	defaultEngine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 	dec := defaultEngine.Evaluate(p, nil)
 	if !dec.Approved() {
 		t.Fatalf("ConsultingAgency rejected under default policy: %+v", dec.Reasons)
 	}
 
 	customPolicy := approval.DefaultPolicy()
-	customPolicy.StaffingTypes[posting.ConsultingAgency] = true
-	strictEngine := approval.NewEngine(customPolicy, fx.Default, detector)
+	customPolicy.Rules = approval.DefaultRules(posting.StaffingFirm, posting.ConsultingAgency)
+	strictEngine := newEngine(t, customPolicy, fx.Default, detector)
 	decStrict := strictEngine.Evaluate(p, nil)
 	if !hasReason(decStrict.Reasons, approval.StaffingFirm) {
-		t.Errorf("ConsultingAgency not rejected when StaffingTypes configured to include it: %+v", decStrict.Reasons)
+		t.Errorf("ConsultingAgency not rejected when the rules exclude it: %+v", decStrict.Reasons)
 	}
 }
 
@@ -229,7 +238,7 @@ func TestDescriptionBeatsDeclared(t *testing.T) {
 		"Description written in English.":        {lang: posting.English, reliable: true},
 		"Buscamos un desarrollador de software.": {lang: posting.Spanish, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	t.Run("English description with blank declared is approved", func(t *testing.T) {
 		p := validPosting()
@@ -240,8 +249,8 @@ func TestDescriptionBeatsDeclared(t *testing.T) {
 		if !dec.Approved() {
 			t.Fatalf("job rejected when description is English and declared is blank: %+v", dec.Reasons)
 		}
-		if dec.Job.Lang() != posting.English {
-			t.Errorf("Job.Lang() = %q, want %q", dec.Job.Lang(), posting.English)
+		if dec.Language != posting.English {
+			t.Errorf("Language = %q, want %q", dec.Language, posting.English)
 		}
 	})
 
@@ -265,7 +274,7 @@ func TestUnreliableFallsBackToDeclared(t *testing.T) {
 	detector := fakeDetector{
 		"Short ambiguous text": {lang: "", reliable: false},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	p := validPosting()
 	p.Description = "Short ambiguous text"
@@ -289,7 +298,7 @@ func TestMarkets(t *testing.T) {
 		"English text": {lang: posting.English, reliable: true},
 		"French text":  {lang: posting.French, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	t.Run("Remote anywhere with no location", func(t *testing.T) {
 		p := validPosting()
@@ -393,7 +402,7 @@ func TestMarkets(t *testing.T) {
 		}
 	})
 
-	t.Run("Extensibility future UK-remote rule", func(t *testing.T) {
+	t.Run("UK-remote appended after defaults beats the remote catch-all", func(t *testing.T) {
 		policy := approval.DefaultPolicy()
 		ukRemote := approval.MarketPolicy{
 			Name:         "UK-remote",
@@ -402,9 +411,9 @@ func TestMarkets(t *testing.T) {
 			MinHourlyUSD: decimal.RequireFromString("45"),
 			Languages:    []posting.Language{posting.English},
 		}
-		policy.Markets = append([]approval.MarketPolicy{ukRemote}, policy.Markets...)
+		policy.Markets = append(policy.Markets, ukRemote)
 
-		customEngine := approval.NewEngine(policy, fakeFX{posting.GBP: decimal.RequireFromString("1.30")}, detector)
+		customEngine := newEngine(t, policy, fakeFX{posting.GBP: decimal.RequireFromString("1.30")}, detector)
 
 		p := validPosting()
 		p.Remote = true
@@ -424,13 +433,47 @@ func TestMarkets(t *testing.T) {
 			t.Errorf("Market = %q, want UK-remote", decCustom.Market)
 		}
 
-		defaultEngine := approval.NewEngine(approval.DefaultPolicy(), fakeFX{posting.GBP: decimal.RequireFromString("1.30")}, detector)
+		defaultEngine := newEngine(t, approval.DefaultPolicy(), fakeFX{posting.GBP: decimal.RequireFromString("1.30")}, detector)
 		decDefault := defaultEngine.Evaluate(p, nil)
 		if decDefault.Approved() {
 			t.Fatalf("expected 93.6k USD job rejected under default policy with $100k threshold")
 		}
 		if !hasReason(decDefault.Reasons, approval.SalaryBelow) {
 			t.Errorf("missing SalaryBelow in %+v", decDefault.Reasons)
+		}
+	})
+
+	t.Run("UK-remote at exactly 90k USD needs the documented 89999.99 minimum", func(t *testing.T) {
+		// Catches: the README's "90k or more" market rejecting exactly 90,000 USD.
+		p := validPosting()
+		p.Remote = true
+		p.Location = &posting.Location{City: "London", Country: posting.Country("GB")}
+		p.Salary = &posting.Salary{
+			Amount:   decimal.RequireFromString("72000"), // 72,000 * 1.25 = 90,000.00 USD
+			Currency: posting.GBP,
+			Unit:     posting.Annual,
+		}
+		p.Description = "English text"
+
+		for _, tt := range []struct {
+			minAnnual    string
+			wantApproved bool
+		}{
+			{"89999.99", true},
+			{"90000", false},
+		} {
+			policy := approval.DefaultPolicy()
+			policy.Markets = append(policy.Markets, approval.MarketPolicy{
+				Name:         "Remote-UK",
+				Matches:      approval.RemoteIn(posting.Country("GB")),
+				MinAnnualUSD: decimal.RequireFromString(tt.minAnnual),
+				MinHourlyUSD: decimal.RequireFromString("45"),
+				Languages:    []posting.Language{posting.English},
+			})
+			eng := newEngine(t, policy, fakeFX{posting.GBP: decimal.RequireFromString("1.25")}, detector)
+			if dec := eng.Evaluate(p, nil); dec.Approved() != tt.wantApproved {
+				t.Errorf("MinAnnualUSD %s: approved = %v, want %v (%+v)", tt.minAnnual, dec.Approved(), tt.wantApproved, dec.Reasons)
+			}
 		}
 	})
 }
@@ -440,7 +483,7 @@ func TestNormalizationIssues(t *testing.T) {
 	detector := fakeDetector{
 		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	tests := []struct {
 		name       string
@@ -513,36 +556,12 @@ func TestNormalizationIssues(t *testing.T) {
 	}
 }
 
-func TestPostedOnImmutability(t *testing.T) {
-	// Catches: sharing mutable *civil.Date pointer between input Posting and constructed Job.
-	detector := fakeDetector{
-		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
-	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
-
-	date := civil.Date{Year: 2026, Month: 10, Day: 14}
-	p := validPosting()
-	p.PostedOn = &date
-
-	dec := engine.Evaluate(p, nil)
-	if !dec.Approved() {
-		t.Fatalf("job rejected unexpectedly: %+v", dec.Reasons)
-	}
-
-	// Mutate caller's date
-	date.Day = 25
-
-	if dec.Job.PostedOn().Day == 25 {
-		t.Errorf("Job.PostedOn() mutated when caller modified source date pointer")
-	}
-}
-
 func TestNilSalaryDoesNotPanic(t *testing.T) {
 	// Catches: nil pointer dereference when evaluating a posting with nil salary and empty issues.
 	detector := fakeDetector{
 		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
 	}
-	engine := approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 
 	p := validPosting()
 	p.Salary = nil
@@ -559,5 +578,90 @@ func TestNilSalaryDoesNotPanic(t *testing.T) {
 	}
 	if !hasReason(dec.Reasons, approval.SalaryMissing) {
 		t.Errorf("missing SalaryMissing reason: %+v", dec.Reasons)
+	}
+}
+
+func TestNewEngineRejectsMissingDependencies(t *testing.T) {
+	// Catches: an engine built without FX or a detector that approves jobs
+	// without checking their salary or language.
+	detector := fakeDetector{}
+	noVersion := approval.DefaultPolicy()
+	noVersion.Version = ""
+	noRules := approval.DefaultPolicy()
+	noRules.Rules = nil
+	tests := []struct {
+		name    string
+		policy  approval.Policy
+		fx      approval.FXRates
+		lang    approval.LanguageDetector
+		wantErr bool
+	}{
+		{"all set", approval.DefaultPolicy(), fx.Default, detector, false},
+		{"nil fx", approval.DefaultPolicy(), nil, detector, true},
+		{"nil detector", approval.DefaultPolicy(), fx.Default, nil, true},
+		{"empty version", noVersion, fx.Default, detector, true},
+		{"no rules", noRules, fx.Default, detector, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			engine, err := approval.NewEngine(tt.policy, tt.fx, tt.lang)
+			if (err != nil) != tt.wantErr {
+				t.Fatalf("NewEngine() error = %v, wantErr %v", err, tt.wantErr)
+			}
+			if !tt.wantErr && engine == nil {
+				t.Fatal("NewEngine() returned nil engine without error")
+			}
+		})
+	}
+}
+
+func TestThresholdUsesStoredPrecision(t *testing.T) {
+	// Catches: approving on sub-cent USD that Postgres then stores as exactly
+	// the threshold (numeric(14,2)).
+	detector := fakeDetector{
+		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
+	}
+	engine := newEngine(t, approval.DefaultPolicy(), fakeFX{
+		posting.USD: decimal.NewFromInt(1),
+		posting.CAD: decimal.RequireFromString("0.70"),
+	}, detector)
+
+	tests := []struct {
+		name   string
+		amount string
+		cur    posting.Currency
+	}{
+		{"USD sub-cent above threshold", "100000.004", posting.USD},
+		{"CAD converting to sub-cent above threshold", "142857.1435", posting.CAD},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := validPosting()
+			p.Salary = &posting.Salary{Amount: decimal.RequireFromString(tt.amount), Currency: tt.cur, Unit: posting.Annual}
+			dec := engine.Evaluate(p, nil)
+			if dec.Approved() || !hasReason(dec.Reasons, approval.SalaryBelow) {
+				t.Errorf("approved=%v reasons=%+v, want salary_below", dec.Approved(), dec.Reasons)
+			}
+			if dec.FX == nil || dec.FX.AnnualUSD.StringFixed(2) != "100000.00" || !dec.FX.AnnualUSD.Equal(decimal.RequireFromString("100000")) {
+				t.Errorf("FX.AnnualUSD = %v, want 100000.00", dec.FX)
+			}
+		})
+	}
+}
+
+func TestEngineFXErrorRejects(t *testing.T) {
+	// Catches: an explicit currency missing from the rate table being approved
+	// or rejected without naming the currency.
+	detector := fakeDetector{
+		"Building scalable cloud backend services.": {lang: posting.English, reliable: true},
+	}
+	engine := newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
+	p := validPosting()
+	p.Salary.Currency = posting.Currency("JPY")
+
+	dec := engine.Evaluate(p, nil)
+	want := []approval.Reason{{Code: approval.SalaryCurrencyUnknown, Detail: "fx: unknown currency: JPY"}}
+	if dec.Approved() || dec.FX != nil || !reflect.DeepEqual(dec.Reasons, want) {
+		t.Errorf("approved=%v FX=%v reasons=%+v, want rejected, no FX, %+v", dec.Approved(), dec.FX, dec.Reasons, want)
 	}
 }

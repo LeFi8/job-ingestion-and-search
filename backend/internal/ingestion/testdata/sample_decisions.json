@@ -1,0 +1,156 @@
+{
+  "fingerprints": {
+    "2026-10-13.1": "4c43bb0026348998a41c54171d5e6ded4dd927074c2340b74b7f9bf773d001db",
+    "2026-10-19.1": "4c43bb0026348998a41c54171d5e6ded4dd927074c2340b74b7f9bf773d001db"
+  },
+  "decisions": [
+    {
+      "index": 0,
+      "title": "Backend Engineer",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 1,
+      "title": "Frontend Developer Intern",
+      "approved": false,
+      "reasons": [
+        "not_full_time",
+        "staffing_firm",
+        "salary_below"
+      ]
+    },
+    {
+      "index": 2,
+      "title": "Machine Learning Engineer",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 3,
+      "title": "Agile Project Lead",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 4,
+      "title": "DevOps Consultant",
+      "approved": false,
+      "reasons": [
+        "not_full_time"
+      ]
+    },
+    {
+      "index": 5,
+      "title": "Senior Software Engineer",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 6,
+      "title": "Junior Developer",
+      "approved": false,
+      "reasons": [
+        "staffing_firm",
+        "salary_below"
+      ]
+    },
+    {
+      "index": 7,
+      "title": "Data Scientist",
+      "approved": false,
+      "reasons": [
+        "salary_below"
+      ]
+    },
+    {
+      "index": 8,
+      "title": "Project Manager",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 9,
+      "title": "QA Automation Engineer",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 10,
+      "title": "UX Designer",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 11,
+      "title": "Product Analyst",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 12,
+      "title": "Mobile Engineer",
+      "approved": false,
+      "reasons": [
+        "location_not_eligible",
+        "language_not_allowed",
+        "salary_below"
+      ]
+    },
+    {
+      "index": 13,
+      "title": "Technical Writer",
+      "approved": false,
+      "reasons": [
+        "not_full_time",
+        "salary_currency_unknown"
+      ]
+    },
+    {
+      "index": 14,
+      "title": "Cybersecurity Specialist",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 15,
+      "title": "Growth Marketing Manager",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 16,
+      "title": "Database Administrator",
+      "approved": false,
+      "reasons": [
+        "not_full_time",
+        "staffing_firm"
+      ]
+    },
+    {
+      "index": 17,
+      "title": "Business Operations Associate",
+      "approved": false,
+      "reasons": [
+        "salary_below"
+      ]
+    },
+    {
+      "index": 18,
+      "title": "Customer Success Manager",
+      "approved": true,
+      "reasons": []
+    },
+    {
+      "index": 19,
+      "title": "",
+      "approved": false,
+      "reasons": [
+        "title_missing",
+        "not_full_time",
+        "staffing_firm",
+        "salary_below"
+      ]
+    }
+  ]
+}

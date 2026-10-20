@@ -51,19 +51,25 @@ func (f *fakeSaver) SaveOutcome(_ context.Context, r storage.PostingRecord) (boo
 	return true, nil
 }
 
-func (f *fakeSaver) Quarantine(_ context.Context, _ string, q raw.Quarantined) error {
+func (f *fakeSaver) Quarantine(_ context.Context, _ string, q raw.Quarantined) (bool, error) {
+	for _, existing := range f.quarantined {
+		if bytes.Equal(existing.Raw, q.Raw) {
+			return false, nil
+		}
+	}
 	f.quarantined = append(f.quarantined, q)
-	return nil
+	return true, nil
 }
 
 var testDecidedAt = time.Date(2026, 1, 2, 3, 4, 5, 0, time.UTC)
 
-func testEngine() *approval.Engine {
+func testEngine(t *testing.T) *approval.Engine {
+	t.Helper()
 	detector := fakeDetector{
 		"Rejoignez notre équipe pour concevoir des modèles de machine learning avancés.": {lang: posting.French, reliable: true},
 		"Entwickeln Sie mobile Anwendungen für iOS und Android.":                         {lang: posting.German, reliable: true},
 	}
-	return approval.NewEngine(approval.DefaultPolicy(), fx.Default, detector)
+	return newEngine(t, approval.DefaultPolicy(), fx.Default, detector)
 }
 
 func fixtureElements(t *testing.T) []json.RawMessage {
@@ -92,7 +98,7 @@ func runFeed(t *testing.T, input string, s ingestion.Saver, log *slog.Logger) (i
 	if log == nil {
 		log = slog.New(slog.NewJSONHandler(io.Discard, nil))
 	}
-	return ingestion.Run(context.Background(), strings.NewReader(input), "test-feed", testDecidedAt, testEngine(), s, log)
+	return ingestion.Run(context.Background(), strings.NewReader(input), "test-feed", testDecidedAt, testEngine(t), s, log)
 }
 
 func TestRunFixture(t *testing.T) {
@@ -188,6 +194,25 @@ func TestRunMalformed(t *testing.T) {
 	}
 	if len(s.records) != 2 {
 		t.Errorf("len(records) = %d, want 2", len(s.records))
+	}
+}
+
+func TestRunQuarantineRepeatInFeed(t *testing.T) {
+	// Catches: a repeated bad element in one feed reported as unchanged and never logged.
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	input := feed(`"same bad"`, validElement(""), `"same bad"`)
+
+	got, err := runFeed(t, input, newFakeSaver(), log)
+	if err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	if got.Quarantined != 1 || got.Duplicate != 1 || got.Unchanged != 0 {
+		t.Errorf("Run() = %+v, want Quarantined 1, Duplicate 1, Unchanged 0", got)
+	}
+	line := findLogLine(t, &buf, "feed.duplicate_element")
+	if line["index"] != float64(2) || line["first_index"] != float64(0) {
+		t.Errorf("feed.duplicate_element = %v, want index 2 and first_index 0", line)
 	}
 }
 
@@ -378,5 +403,20 @@ func TestRunSalaryUSDAnnual(t *testing.T) {
 				t.Errorf("SalaryUSDAnnual = %v, want %s", rec.SalaryUSDAnnual, tt.want)
 			}
 		})
+	}
+}
+
+func TestRunLogsInvalidDate(t *testing.T) {
+	// Catches: an unparseable posting date silently becoming null with no trace.
+	var buf bytes.Buffer
+	log := slog.New(slog.NewJSONHandler(&buf, nil))
+	input := feed(strings.Replace(validElement(""), `"posting_date":"2023-10-03"`, `"posting_date":"10/01/2023"`, 1))
+
+	if _, err := runFeed(t, input, newFakeSaver(), log); err != nil {
+		t.Fatalf("Run() error = %v", err)
+	}
+	line := findLogLine(t, &buf, "job.date_invalid")
+	if line["index"] != float64(0) || line["value"] != "10/01/2023" {
+		t.Errorf("job.date_invalid = %v, want index 0 and value 10/01/2023", line)
 	}
 }

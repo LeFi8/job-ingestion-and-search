@@ -11,7 +11,7 @@ import {
   ListSkeleton,
   PageOutOfRange,
 } from '../components/States'
-import { pageCount } from './jobsSearch'
+import { pageCount } from './jobs.search'
 
 const route = getRouteApi('/')
 
@@ -22,6 +22,8 @@ export function JobsPage() {
   const selectedId = search.job ?? jobs.data?.items[0]?.id
   const job = useJob(selectedId)
   const showDetailOnly = search.job !== undefined
+  const awaitingJobs = jobs.isPending || (jobs.isPlaceholderData && jobs.data.total === 0)
+  const listOnly = selectedId === undefined && !awaitingJobs
 
   return (
     <div className="flex h-dvh flex-col">
@@ -33,53 +35,66 @@ export function JobsPage() {
           </div>
         </div>
       </header>
-      <main className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]">
+      <main
+        className={`mx-auto grid min-h-0 w-full flex-1 ${listOnly ? 'max-w-lg' : 'max-w-7xl lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)]'}`}
+      >
         <section
           aria-label="Job list"
           className={`${showDetailOnly ? 'hidden lg:block' : ''} min-h-0 overflow-y-auto p-4`}
         >
-          {jobs.isError ? (
+          {jobs.isLoadingError ? (
             <ErrorState
               error={jobs.error}
               onRetry={() => {
                 void jobs.refetch()
               }}
             />
-          ) : jobs.isPending ? (
+          ) : awaitingJobs ? (
             <ListSkeleton />
           ) : jobs.data.total === 0 ? (
             <EmptyState
               q={search.q.trim()}
               country={search.country}
-              onClear={() => {
-                void navigate({ search: {} })
-              }}
+              onClear={
+                search.q.trim() !== '' || search.country !== undefined
+                  ? () => {
+                      void navigate({ search: {} })
+                    }
+                  : undefined
+              }
             />
           ) : jobs.data.items.length === 0 ? (
             <PageOutOfRange page={search.page} lastPage={pageCount(jobs.data.total, perPage)} />
           ) : (
-            <JobList page={jobs.data} selectedId={selectedId} isFetching={jobs.isFetching} />
-          )}
-        </section>
-        <section
-          aria-label="Job details"
-          className={`${showDetailOnly ? '' : 'hidden lg:block'} min-h-0 overflow-y-auto p-4 lg:pl-2`}
-        >
-          {job.error instanceof ApiError && job.error.status === 404 ? (
-            <JobGone />
-          ) : job.isError ? (
-            <ErrorState
-              error={job.error}
-              onRetry={() => {
-                void job.refetch()
-              }}
+            <JobList
+              page={jobs.data}
+              currentPage={search.page}
+              selectedId={selectedId}
+              isFetching={jobs.isFetching}
             />
-          ) : job.isLoading || (selectedId === undefined && jobs.isPending) ? (
-            <DetailSkeleton />
-          ) : (
-            <JobDetail job={job.data} />
           )}
         </section>
+        {!listOnly && (
+          <section
+            aria-label="Job details"
+            className={`${showDetailOnly ? '' : 'hidden lg:block'} min-h-0 overflow-y-auto p-4 lg:pl-2`}
+          >
+            {job.error instanceof ApiError && job.error.status === 404 ? (
+              <JobGone />
+            ) : job.isError ? (
+              <ErrorState
+                error={job.error}
+                onRetry={() => {
+                  void job.refetch()
+                }}
+              />
+            ) : job.isLoading || selectedId === undefined ? (
+              <DetailSkeleton />
+            ) : (
+              <JobDetail job={job.data} />
+            )}
+          </section>
+        )}
       </main>
     </div>
   )

@@ -33,7 +33,8 @@ URL-safe: Compose builds `DATABASE_URL` from it, and `@`, `/`, `:` or `#` break 
 | --- | --- | --- |
 | Start Postgres and Elasticsearch | `mise run compose` | `docker compose up -d --wait` |
 | Apply migrations | `mise run migrate` | `go -C backend run ./cmd/migrate` |
-| Ingest the sample feed | `mise run seed` | `go -C backend run ./cmd/ingest ../data/sample.json` |
+| Ingest the demo feed | `mise run ingest:seed` | `go -C backend run ./cmd/ingest ../data/seed.json` |
+| Optionally add the sample feed | `mise run ingest:sample` | `go -C backend run ./cmd/ingest ../data/sample.json` |
 | Run worker, API and UI together | `mise run dev` | the three commands below, one terminal each |
 | Index into Elasticsearch | `mise run worker` | `go -C backend run ./cmd/worker` |
 | Serve the API on `:8080` | `mise run api` | `go -C backend run ./cmd/api` |
@@ -44,7 +45,7 @@ Check the backend on its own:
 
 ```sh
 curl -s localhost:8080/healthz -o /dev/null -w '%{http_code}\n'   # 200
-curl -s localhost:8080/api/jobs | jq .total                        # 11
+curl -s localhost:8080/api/jobs | jq .total
 ```
 
 Each binary reads only its own environment keys and exits listing every missing or invalid
@@ -88,7 +89,7 @@ The Go linter config (`backend/.golangci.yml`) enables the `integration` build t
 integration test files are linted too. golangci-lint is fetched at its pinned version on first
 run. `sqlc`, `goose` and `oapi-codegen` are `tool` entries in `backend/go.mod` and run with
 `go tool <name>`; there is nothing to install separately. Lint and type errors are fixed in
-the code, never suppressed with `//nolint`, `eslint-disable` or `@ts-ignore`.
+the code, never suppressed with `//nolint`, `eslint-disable`, `@ts-ignore` or `squawk-ignore`.
 
 ## Generating code
 
@@ -107,12 +108,14 @@ edit and must pass the same lint and type checks as the rest of the code.
 ## Making changes
 
 **A migration.** Create the file with the goose command above (`-s` keeps the sequential
-numbering), fill in `-- +goose Up` and `-- +goose Down`, apply it with `mise run migrate`, and
+numbering), fill in `-- +goose Up` (delete the `Down` section; migrations are forward-only),
+start it with `SET lock_timeout` and `SET statement_timeout`, apply it with `mise run migrate`, and
 regenerate the query code. Lint it before pushing:
 `(cd backend && npm exec --yes --package=squawk-cli@2.66.0 -- squawk migrations/*.sql)`.
 Migrations are forward-only and run as their own step, never at application start, so a
 breaking change goes in stages: add the new shape, move the code over, then drop the old one in
-a later migration.
+a later migration. Nothing is released yet, so `00001_init.sql` is still edited in place; after
+pulling a change to it, delete `./volumes/postgres` and run `mise run migrate` again.
 
 **A query.** Edit `backend/internal/storage/queries/*.sql`, run
 `go -C backend tool sqlc generate`, and check it with
@@ -127,10 +130,14 @@ npm --prefix frontend run gen:api
 npm exec --yes --package=@redocly/cli@2.57.0 -- redocly lint api/openapi.yaml
 ```
 
-**Approval rules.** Change `backend/internal/approval` and bump `PolicyVersion` in
-`backend/internal/approval/policy.go`. The version is part of each posting's content hash, so
-the next ingest of a feed re-evaluates every posting in it instead of skipping them as
-unchanged. Adding a market is a policy entry; see
+**Approval rules.** Each rule is a function in `backend/internal/approval/rules.go`, listed
+in order by `DefaultRules`. Bump `PolicyVersion` in `backend/internal/approval/policy.go` after
+any change that can move a decision: `internal/approval`, the FX table in `internal/fx`,
+`internal/ingestion/normalize` or `internal/langdetect`. The version is part of each posting's
+content hash, so the next ingest of a feed re-evaluates every posting in it instead of skipping
+them as unchanged. `TestSampleFeedDecisions` fails when the sample feed's decisions change
+without a bump; add the new version's fingerprint to
+`backend/internal/ingestion/testdata/sample_decisions.json` and never edit an existing one. Adding a market is a policy entry; see
 [adding the remote-UK market](../backend/README.md#adding-the-remote-uk-market).
 
 **The search mapping.** Mappings cannot change in place. Edit
@@ -162,7 +169,7 @@ What each suite covers, and the full list of CI checks, is in [testing](testing.
 - **`mise ERROR … not trusted`:** run `mise trust` once in a fresh clone.
 - **Compose fails with "port is already allocated":** something else uses 5432, 9200, 8080 or
   5173. Stop it, or the other copy of this stack.
-- **Search returns 0 jobs but the seed says `unchanged=20`:** the index is missing while
+- **Search returns 0 jobs but the ingest says `unchanged=20`:** the index is missing while
   Postgres still has the postings (for example after deleting `./volumes/elasticsearch`). Run
   `mise run reindex`.
 - **`set POSTGRES_PASSWORD in .env`:** `.env` is missing; copy it from `.env.example`.

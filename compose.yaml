@@ -47,16 +47,17 @@ services:
       postgres:
         condition: service_healthy
 
-  seed:
+  ingest:
     <<: *backend
-    command: ["ingest", "/data/sample.json"]
+    profiles: [ingest]
+    entrypoint: ["ingest"]
     environment:
       DATABASE_URL: *database-url
     volumes:
       - ./data:/data:ro
     depends_on:
-      migrate:
-        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
 
   worker:
     <<: *backend
@@ -68,7 +69,7 @@ services:
       WORKER_BATCH_SIZE: ${WORKER_BATCH_SIZE:?set WORKER_BATCH_SIZE in .env}
       WORKER_POLL_INTERVAL: ${WORKER_POLL_INTERVAL:?set WORKER_POLL_INTERVAL in .env}
     depends_on:
-      seed:
+      migrate:
         condition: service_completed_successfully
       elasticsearch:
         condition: service_healthy

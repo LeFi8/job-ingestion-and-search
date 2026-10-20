@@ -1,5 +1,7 @@
--- squawk-ignore-file require-lock-timeout, require-statement-timeout, ban-drop-table, prefer-bigint-over-int
 -- +goose Up
+SET lock_timeout = '5s';
+SET statement_timeout = '60s';
+
 CREATE TABLE postings (
   id                 uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   source_id          text NOT NULL,
@@ -35,7 +37,7 @@ CREATE TABLE outbox (
   posting_id   uuid NOT NULL REFERENCES postings(id) ON DELETE CASCADE,
   created_at   timestamptz NOT NULL DEFAULT now(),
   processed_at timestamptz,
-  attempts     int NOT NULL DEFAULT 0,
+  attempts     bigint NOT NULL DEFAULT 0,
   last_error   text,
   failed_at    timestamptz
 );
@@ -46,15 +48,10 @@ CREATE INDEX idx_outbox_posting_id ON outbox (posting_id);
 CREATE TABLE quarantine (
   id            bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   source_id     text NOT NULL,
-  element_index int NOT NULL,
+  element_index bigint NOT NULL,
   raw           bytea NOT NULL,
   raw_hash      bytea GENERATED ALWAYS AS (sha256(raw)) STORED,
   error         text NOT NULL,
   created_at    timestamptz NOT NULL DEFAULT now(),
   UNIQUE (source_id, raw_hash)
 );
-
--- +goose Down
-DROP TABLE quarantine;
-DROP TABLE outbox;
-DROP TABLE postings;

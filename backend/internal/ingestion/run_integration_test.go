@@ -58,7 +58,7 @@ func openDB(t *testing.T) (*storage.Store, *pgx.Conn, context.Context) {
 func runInto(t *testing.T, ctx context.Context, store *storage.Store, input string) ingestion.Summary {
 	t.Helper()
 	log := slog.New(slog.NewJSONHandler(&bytes.Buffer{}, nil))
-	sum, err := ingestion.Run(ctx, strings.NewReader(input), "test-feed", testDecidedAt, testEngine(), store, log)
+	sum, err := ingestion.Run(ctx, strings.NewReader(input), "test-feed", testDecidedAt, testEngine(t), store, log)
 	if err != nil {
 		t.Fatalf("Run() error = %v", err)
 	}
@@ -148,5 +148,20 @@ func TestRunDuplicateKeyAgainstPostgres(t *testing.T) {
 	}
 	if salary != "145000.00" {
 		t.Errorf("salary_amount = %s, want 145000.00 (first element)", salary)
+	}
+}
+
+func TestQuarantineRerunIsUnchanged(t *testing.T) {
+	// Catches: a re-run reporting already-quarantined elements as new work.
+	store, _, ctx := openDB(t)
+	input := feed(`"quarantine rerun element"`, `4242`)
+
+	first := runInto(t, ctx, store, input)
+	if want := (ingestion.Summary{Quarantined: 2}); first != want {
+		t.Errorf("first Run() = %+v, want %+v", first, want)
+	}
+	second := runInto(t, ctx, store, input)
+	if want := (ingestion.Summary{Unchanged: 2}); second != want {
+		t.Errorf("second Run() = %+v, want %+v", second, want)
 	}
 }

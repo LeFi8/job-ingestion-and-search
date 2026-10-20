@@ -23,7 +23,9 @@ func normalizeLocation(rl raw.Location, remote bool) (*posting.Location, bool) {
 		if strings.EqualFold(cleanText(rl.Text), "remote") {
 			return nil, true
 		}
-		loc = parseLocationText(rl.Text)
+		var textRemote bool
+		loc, textRemote = parseLocationText(rl.Text)
+		remote = remote || textRemote
 	} else {
 		loc = posting.Location{City: cleanText(rl.City), Region: cleanText(rl.State)}
 		loc.Country, _ = posting.LookupCountry(cleanText(rl.Country))
@@ -34,11 +36,27 @@ func normalizeLocation(rl raw.Location, remote bool) (*posting.Location, bool) {
 	return &loc, remote
 }
 
-func parseLocationText(text string) posting.Location {
+func parseLocationText(text string) (posting.Location, bool) {
 	segments := strings.Split(text, ",")
 	for i, s := range segments {
 		segments[i] = cleanText(s)
 	}
+	remote := false
+	if len(segments) > 1 {
+		switch {
+		case strings.EqualFold(segments[0], "remote"):
+			segments, remote = segments[1:], true
+		case strings.EqualFold(segments[len(segments)-1], "remote"):
+			segments, remote = segments[:len(segments)-1], true
+		}
+	}
+	if remote && len(segments) == 1 && usStates[strings.ToUpper(segments[0])] {
+		return posting.Location{Region: strings.ToUpper(segments[0]), Country: "US"}, true
+	}
+	return parseLocationSegments(segments), remote
+}
+
+func parseLocationSegments(segments []string) posting.Location {
 	switch len(segments) {
 	case 1:
 		if c, ok := posting.LookupCountry(segments[0]); ok {
@@ -55,6 +73,10 @@ func parseLocationText(text string) posting.Location {
 		}
 		return posting.Location{City: city, Region: last}
 	}
+	region := segments[1]
+	if len(region) == 2 {
+		region = strings.ToUpper(region)
+	}
 	c, _ := posting.LookupCountry(segments[len(segments)-1])
-	return posting.Location{City: segments[0], Region: segments[1], Country: c}
+	return posting.Location{City: segments[0], Region: region, Country: c}
 }

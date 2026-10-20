@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest'
-import { jobsSearchSchema, parseSearch, stringifySearch } from './jobsSearch'
+import { jobsSearchSchema, parseSearch, stringifySearch } from './jobs.search'
 
 const parse = (search: string) => jobsSearchSchema.parse(parseSearch(search))
 

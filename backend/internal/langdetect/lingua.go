@@ -6,13 +6,13 @@ import (
 	"github.com/lefi8/job-ingestion-and-search/backend/internal/posting"
 )
 
-const MinRelativeDistance = 0.1
+const minRelativeDistance = 0.1
 
 type Lingua struct {
 	detector lingua.LanguageDetector
 }
 
-func New(minRelativeDistance float64) *Lingua {
+func New() *Lingua {
 	detector := lingua.NewLanguageDetectorBuilder().
 		FromLanguages(
 			lingua.English,

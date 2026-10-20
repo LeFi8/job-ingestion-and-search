@@ -2,6 +2,7 @@ package fx
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/shopspring/decimal"
 
@@ -23,7 +24,7 @@ var Default = Static{
 func (s Static) ToUSD(amount decimal.Decimal, cur posting.Currency) (decimal.Decimal, decimal.Decimal, error) {
 	rate, ok := s[cur]
 	if !ok {
-		return decimal.Zero, decimal.Zero, ErrUnknownCurrency
+		return decimal.Zero, decimal.Zero, fmt.Errorf("%w: %s", ErrUnknownCurrency, cur)
 	}
 	return amount.Mul(rate), rate, nil
 }

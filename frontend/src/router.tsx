@@ -1,7 +1,7 @@
 import { createRootRoute, createRoute, createRouter } from '@tanstack/react-router'
 import type { RouterHistory } from '@tanstack/react-router'
 import { JobsPage } from './routes/jobs'
-import { jobsSearchSchema, parseSearch, stringifySearch } from './routes/jobsSearch'
+import { jobsSearchSchema, parseSearch, stringifySearch } from './routes/jobs.search'
 
 const rootRoute = createRootRoute()
 

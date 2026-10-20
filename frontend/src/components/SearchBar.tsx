@@ -1,17 +1,17 @@
 import { getRouteApi } from '@tanstack/react-router'
 import { Search } from 'lucide-react'
-import { useState } from 'react'
-import type { JobsPage } from '../api/client'
+import { useRef, useState } from 'react'
+import type { JobsPage, Sort } from '../api/client'
 import { formatCountry } from '../lib/format'
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback'
-import { sortValues } from '../routes/jobsSearch'
+import { maxQueryLength, sortValues } from '../routes/jobs.search'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 
 const route = getRouteApi('/')
 const allCountries = 'all'
 
-const sortLabels: Record<(typeof sortValues)[number], string> = {
+const sortLabels: Record<NonNullable<Sort>, string> = {
   relevance: 'Relevance',
   date_desc: 'Newest',
   date_asc: 'Oldest',
@@ -29,7 +29,11 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
     setDraft(search.q)
   }
 
-  const commitQuery = useDebouncedCallback((q: string) => {
+  const committedQRef = useRef<string | null>(null)
+  const commitQuery = useDebouncedCallback((q: string, base: string) => {
+    const movedElsewhere = search.q !== base && search.q !== committedQRef.current
+    if (movedElsewhere || q.trim() === search.q.trim()) return
+    committedQRef.current = q
     void navigate({
       search: (prev) => ({
         ...prev,
@@ -44,7 +48,7 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
 
   const changeQuery = (q: string) => {
     setDraft(q)
-    commitQuery(q)
+    commitQuery(q, search.q)
   }
 
   const hasQuery = search.q.trim() !== ''
@@ -65,6 +69,7 @@ export function SearchBar({ facets }: { facets: JobsPage['facets']['country'] })
         <Input
           type="search"
           value={draft}
+          maxLength={maxQueryLength}
           placeholder="Search job titles…"
           onChange={(e) => {
             changeQuery(e.target.value)

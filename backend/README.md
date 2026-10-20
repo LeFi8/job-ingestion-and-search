@@ -16,13 +16,19 @@ handling and how to add a market. Setting up and running the stack is in
 A posting's identity is its source plus company, title, location and posting date, compared
 case- and whitespace-insensitively, with locations and dates compared after normalization.
 Re-ingesting the same feed is a no-op. An edited salary, description or other field updates
-the stored posting in place and re-runs approval. An edited title, location or posting date
-creates a new posting, and the old one stays as it was. Identity uses normalized locations
-and dates, so changing the country aliases, the US state list or date parsing changes the
-identity of the postings they affect in the same way.
+the stored posting in place and re-runs approval. An edited company, title, location or
+posting date creates a new posting, and the old one stays as it was. Identity uses normalized locations
+and dates, so changing the country aliases, the US state list, location segment parsing (a
+`Remote` segment) or date parsing changes the identity of the postings they affect in the same
+way.
 
 If one feed contains several elements with the same identity, the first one is stored and the
-rest are logged as `job.duplicate_key` and counted as `duplicate`.
+rest are logged as `job.duplicate_key` and counted as `duplicate`. A quarantined element that
+repeats byte for byte is stored once; the repeats are logged as `feed.duplicate_element` and
+counted as `duplicate`.
+
+Each new or changed rejection is logged as `job.rejected` with its reason codes, alongside the
+`reasons` stored on the posting. Re-ingesting an unchanged rejection does not log it again.
 
 The source defaults to the file name without its extension. Pass `--source=<id>` when the
 file name changes between runs (for example dated exports), or every run creates a new set
@@ -66,9 +72,9 @@ A client that disconnects mid-search gets no response and is logged at INFO with
 With the sample feed loaded:
 
 ```sh
-curl -s 'localhost:8080/api/jobs' | jq '.total'                                  # 11
+curl -s 'localhost:8080/api/jobs' | jq '.total'
 curl -s 'localhost:8080/api/jobs?q=enginer' | jq '[.items[].title]'              # typo-tolerant match on "Engineer"
-curl -s 'localhost:8080/api/jobs?country=CA' | jq '.total, .facets.country'     # 2; facets still count US, CA and GB
+curl -s 'localhost:8080/api/jobs?country=CA' | jq '.total, .facets.country'     # facets still count every country
 curl -s 'localhost:8080/api/jobs?sort=salary_desc' | jq '[.items[].salary_usd_annual]'
 curl -s 'localhost:8080/api/jobs?sort=date_asc' | jq '.items[-1].title'          # "Growth Marketing Manager" (no date)
 curl -si 'localhost:8080/api/jobs?sort=bogus' | head -1                          # HTTP/1.1 400 Bad Request
@@ -93,7 +99,7 @@ The brief suggests `models`, `ingestion`, `approval` and `storage`. They map to:
 | `ingestion` | `internal/ingestion`                                | `Evaluate`, `Run` and the idempotency key                                                  | stdlib                                     |
 |             | `internal/ingestion/raw`                            | Feed decoding and quarantine of malformed records                                          | `encoding/json`                            |
 |             | `internal/ingestion/normalize`                      | Raw records to `posting.Posting` plus issues                                               | stdlib                                     |
-| `approval`  | `internal/approval`                                 | Gates, market policies, `Evaluate`                                                         | stdlib                                     |
+| `approval`  | `internal/approval`                                 | Rules, market policies, `Evaluate`                                                         | stdlib                                     |
 |             | `internal/fx`                                       | Static USD conversion rates                                                                | stdlib                                     |
 |             | `internal/langdetect`                               | Language detection adapter                                                                 | `lingua-go`                                |
 | `storage`   | `internal/storage`                                  | `Store`: posting upsert with outbox row, quarantine, outbox claiming and purge, job detail | Postgres, `pgx/v5`                         |
@@ -120,7 +126,7 @@ The feed is scraped data, so one bad record never stops the rest:
 - A non-object element, or a record with a wrong-typed field, is quarantined with its index
   and raw bytes; the other records continue.
 - A non-numeric salary still ingests and is rejected with `salary_invalid`, as is any amount
-  above 10,000,000 (`MaxSalaryAmount`).
+  that is not positive at cent precision or is above 10,000,000 (`MaxSalaryAmount`).
 - A file that is not one valid JSON array fails as a whole.
 - NUL characters are dropped from text fields; the original record is kept as `bytea` in `raw`.
 
@@ -128,14 +134,17 @@ Not built: streaming decode for very large feeds. The whole file is read into me
 
 ## Adding the remote-UK market
 
-Add one entry to `DefaultPolicy().Markets` in `internal/approval/policy.go`, **before**
-`Remote-anywhere`. Markets are matched in order and the first match wins, so placed after it
-the entry never matches.
+Add one entry to `DefaultPolicy().Markets` in `internal/approval/policy.go`. Every entry in
+`Markets` is tried before the `RemoteAnywhere` catch-all, so a remote UK job uses the new entry.
+Thresholds are exclusive and salaries are decided in cents, so a minimum of 89,999.99 approves
+the brief's "90k USD or more".
 
 ```go
-{Name: "Remote-UK", Matches: RemoteIn(posting.Country("GB")), MinAnnualUSD: decimal.RequireFromString("90000"), MinHourlyUSD: decimal.RequireFromString("45"), Languages: []posting.Language{posting.English}},
+{Name: "Remote-UK", Matches: RemoteIn(posting.Country("GB")), MinAnnualUSD: decimal.RequireFromString("89999.99"), MinHourlyUSD: decimal.RequireFromString("45"), Languages: []posting.Language{posting.English}},
 ```
 
-Then bump `PolicyVersion` in the same file and re-ingest the feed (`mise run seed`). The stored
+Then bump `PolicyVersion` in the same file, add its fingerprint to
+`internal/ingestion/testdata/sample_decisions.json` (the failing `TestSampleFeedDecisions`
+prints it), and re-ingest the feed (`mise run ingest:sample`). The stored
 content hash includes the policy version, so every posting is re-evaluated and re-enqueued,
 and the worker reindexes them.

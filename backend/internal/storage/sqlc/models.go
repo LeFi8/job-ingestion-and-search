@@ -16,7 +16,7 @@ type Outbox struct {
 	PostingID   uuid.UUID          `json:"posting_id"`
 	CreatedAt   pgtype.Timestamptz `json:"created_at"`
 	ProcessedAt pgtype.Timestamptz `json:"processed_at"`
-	Attempts    int32              `json:"attempts"`
+	Attempts    int64              `json:"attempts"`
 	LastError   *string            `json:"last_error"`
 	FailedAt    pgtype.Timestamptz `json:"failed_at"`
 }
@@ -51,7 +51,7 @@ type Posting struct {
 type Quarantine struct {
 	ID           int64              `json:"id"`
 	SourceID     string             `json:"source_id"`
-	ElementIndex int32              `json:"element_index"`
+	ElementIndex int64              `json:"element_index"`
 	Raw          []byte             `json:"raw"`
 	RawHash      []byte             `json:"raw_hash"`
 	Error        string             `json:"error"`

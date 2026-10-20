@@ -44,6 +44,15 @@ func TestNormalize(t *testing.T) {
 				t.Errorf("PostedOn = %v, want nil", p.PostedOn)
 			}
 		}, []posting.IssueCode{posting.SalaryMissing, posting.DateInvalid}},
+		{"date RFC3339 UTC", raw.Posting{PostingDate: "2023-10-01T12:00:00Z"}, wantDate(civil.Date{Year: 2023, Month: 10, Day: 1}), []posting.IssueCode{posting.SalaryMissing}},
+		{"date RFC3339 keeps its own offset", raw.Posting{PostingDate: "2023-10-01T23:30:00-05:00"}, wantDate(civil.Date{Year: 2023, Month: 10, Day: 1}), []posting.IssueCode{posting.SalaryMissing}},
+		{"date US format", raw.Posting{PostingDate: "10/01/2023"}, wantDate(civil.Date{}), []posting.IssueCode{posting.SalaryMissing, posting.DateInvalid}},
+		{"language Spanish", raw.Posting{Language: "Spanish"}, wantLanguage(posting.Spanish), []posting.IssueCode{posting.SalaryMissing}},
+		{"language es", raw.Posting{Language: "es"}, wantLanguage(posting.Spanish), []posting.IssueCode{posting.SalaryMissing}},
+		{"language region subtag", raw.Posting{Language: "en-US"}, wantLanguage(posting.English), []posting.IssueCode{posting.SalaryMissing}},
+		{"language underscore subtag", raw.Posting{Language: "pt_BR"}, wantLanguage(posting.Portuguese), []posting.IssueCode{posting.SalaryMissing}},
+		{"language Dutch", raw.Posting{Language: "Dutch"}, wantLanguage(posting.Dutch), []posting.IssueCode{posting.SalaryMissing}},
+		{"language Italian", raw.Posting{Language: "it"}, wantLanguage(posting.Italian), []posting.IssueCode{posting.SalaryMissing}},
 		{"language English", raw.Posting{Language: "English"}, wantLanguage(posting.English), []posting.IssueCode{posting.SalaryMissing}},
 		{"language code case-insensitive", raw.Posting{Language: " EN "}, wantLanguage(posting.English), []posting.IssueCode{posting.SalaryMissing}},
 		{"language French", raw.Posting{Language: "French"}, wantLanguage(posting.French), []posting.IssueCode{posting.SalaryMissing}},
@@ -101,6 +110,20 @@ func wantLanguage(want posting.Language) func(*testing.T, posting.Posting) {
 	return func(t *testing.T, p posting.Posting) {
 		if p.DeclaredLanguage != want {
 			t.Errorf("DeclaredLanguage = %q, want %q", p.DeclaredLanguage, want)
+		}
+	}
+}
+
+func wantDate(want civil.Date) func(*testing.T, posting.Posting) {
+	return func(t *testing.T, p posting.Posting) {
+		if want == (civil.Date{}) {
+			if p.PostedOn != nil {
+				t.Errorf("PostedOn = %v, want nil", p.PostedOn)
+			}
+			return
+		}
+		if p.PostedOn == nil || *p.PostedOn != want {
+			t.Errorf("PostedOn = %v, want %v", p.PostedOn, want)
 		}
 	}
 }

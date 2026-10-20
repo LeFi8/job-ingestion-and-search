@@ -13,7 +13,7 @@ func TestLinguaFixture(t *testing.T) {
 		t.Skip("skipping slow lingua model test in short mode")
 	}
 
-	detector := langdetect.New(langdetect.MinRelativeDistance)
+	detector := langdetect.New()
 
 	tests := []struct {
 		name         string

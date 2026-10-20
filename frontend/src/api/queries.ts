@@ -1,5 +1,5 @@
-import { QueryClient, keepPreviousData, useQuery } from '@tanstack/react-query'
-import type { JobsSearch } from '../routes/jobsSearch'
+import { QueryClient, keepPreviousData, skipToken, useQuery } from '@tanstack/react-query'
+import type { JobsSearch } from '../routes/jobs.search'
 import { api } from './client'
 import type { Problem } from './client'
 
@@ -55,15 +55,16 @@ export function useJobs(s: JobsSearch) {
 export function useJob(id: string | undefined) {
   return useQuery({
     queryKey: ['job', id],
-    queryFn: async ({ signal }) => {
-      if (id === undefined) throw new Error('useJob: no job id')
-      const { data, error, response } = await api.GET('/api/jobs/{id}', {
-        params: { path: { id } },
-        signal,
-      })
-      if (data === undefined) throw new ApiError(response.status, error)
-      return data
-    },
-    enabled: id !== undefined,
+    queryFn:
+      id === undefined
+        ? skipToken
+        : async ({ signal }) => {
+            const { data, error, response } = await api.GET('/api/jobs/{id}', {
+              params: { path: { id } },
+              signal,
+            })
+            if (data === undefined) throw new ApiError(response.status, error)
+            return data
+          },
   })
 }

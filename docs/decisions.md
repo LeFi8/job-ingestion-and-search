@@ -11,6 +11,19 @@ gap is closed and what is still open, followed by the stack and design choices b
 - **A bare salary number's unit comes from its size.** Below 1,000 is hourly; 20,000 and above
   is annual. Anything in between could be weekly or monthly, so it is rejected
   `salary_unit_ambiguous` instead of guessed.
+- **An explicit unit must fit the amount.** `hourly`, `hour`, `hr`, `h`, `per hour` and
+  `annual`, `annually`, `yearly`, `year`, `yr`, `per year`, `per annum` are understood. An
+  explicit hourly amount of 1,000 or more, or an explicit annual amount below 1,000, is rejected
+  `salary_unit_ambiguous` (detail e.g. `150000 hourly`). Any other unit (e.g. `monthly`) is
+  rejected `salary_unit_ambiguous` too, with the amount as the detail.
+- **An explicit currency must be one we convert** (USD, CAD, GBP, EUR, PLN). Anything else is
+  rejected `salary_currency_unknown` with the code as the detail. A salary object with no or
+  `null` `value` is `salary_missing`; a quoted number is `salary_invalid`.
+- **Salaries are decided at stored precision.** The amount is rounded to cents (half away from
+  zero, as Postgres `numeric` does) before it is converted, and the converted USD value is
+  rounded again before the comparison. The decision is about the salary as stored, so a stored
+  approved salary is always above the threshold: 34.0949 GBP/h is stored as 34.09 GBP, which is
+  44.9988 USD/h, or 45.00 after rounding, and is rejected.
 - **Hourly pay is compared as hourly.** The thresholds are `> $45/h` and `> $100,000` a year.
   Hourly pay is never annualised for the decision (45 × 2080 = 93,600 would not line up with
   100,000); annualising is only used as a sort key.
@@ -22,7 +35,7 @@ gap is closed and what is still open, followed by the stack and design choices b
   segment or the explicit `country` field, and a two-part location ending in a US state code
   is that state. `"Washington, DC"` resolves to the US.
 - **A consulting agency is not a staffing firm.** Company type is an enum and the excluded set
-  (`StaffingTypes`) is configurable; only `staffing_firm` is excluded.
+  (`DefaultRules(posting.StaffingFirm)`) is configurable; only `staffing_firm` is excluded.
 - **Language is detected from the description.** The declared `language` field is used only
   when detection is unreliable (lingua's top two languages are closer than its minimum relative
   distance of 0.1). English is allowed
@@ -34,7 +47,13 @@ gap is closed and what is still open, followed by the stack and design choices b
   - Project Manager: `80,000 GBP × 1.32 = 105,600 USD > 100,000`, approved. At 1.25 it would
     be exactly 100,000 and fail.
 - **An empty `posting_date` becomes null.** The job is still approvable and sorts last in both
-  date directions.
+  date directions. `YYYY-MM-DD` and RFC 3339 timestamps (the date in their own offset) are
+  read; any other date also becomes null and is logged as `job.date_invalid`.
+- **Declared languages** are read by English name or ISO code for all eight detected languages,
+  ignoring a region subtag (`en-US`, `pt_BR`).
+- **"Remote" as a location segment** (`"Remote, USA"`, `"Toronto, Remote"`) marks the job
+  remote and is dropped from the location. A lone US state code left after it (`"Remote, NY"`,
+  `"Remote, CA"`) is that state.
 - **Every failing rule is reported,** not only the first, so a rejection explains itself.
 - **The remote-UK market from the brief's future hint is one policy entry.** See
   [Adding the remote-UK market](../backend/README.md#adding-the-remote-uk-market).
@@ -48,12 +67,18 @@ rather than guessed silently.
    This decides Data Scientist and Project Manager: read as USD, Data Scientist is approved and
    Project Manager is rejected.
 2. **Do consulting agencies, recruiters and executive search firms count as staffing firms?**
-   Consulting agencies do not. The set is configurable.
+   Consulting agencies do not. A company type that is missing or not one of `Direct Employer`,
+   `Staffing Firm` and `Consulting Agency` (e.g. `Recruitment Agency`) is `unknown` and is not
+   excluded, so a posting is not rejected only because the field is absent or worded differently.
 3. **Are fixed exchange rates acceptable?** Yes, for this exercise. With live rates,
    re-evaluating stored postings should be a deliberate operator action, not a side effect of
    a rate moving (see the [production path](architecture.md#production-path)).
 4. **Is a bilingual Canadian description acceptable if its dominant language is English or
    French?** Yes.
+5. **What are "both feeds"?** The brief ships one feed (`data/sample.json`) that mixes two record
+   shapes: a location object or a `"City, State, Country"` string, and a salary object or a bare
+   number. Both shapes parse, and no sample record is quarantined (`TestSampleFeedDecisions`).
+   Another feed is ingested the same way, with its own `--source`.
 
 ## Tech stack
 
@@ -118,7 +143,7 @@ duplicates in results without changing storage.
   Below the `lg` breakpoint the page shows one column: the list, or the selected job with a
   link back to the results.
 - **The URL is the only UI state.** Query, country, sort, page and selected job live in the
-  query string and are parsed by one schema (`frontend/src/routes/jobsSearch.ts`), so every
+  query string and are parsed by one schema (`frontend/src/routes/jobs.search.ts`), so every
   view can be shared, survives a reload and works with back/forward. A hand-edited value that
   fails the schema falls back to its default instead of sending an invalid request. Changing
   the query, country or sort resets the page and clears the selected job.
@@ -144,8 +169,8 @@ Elasticsearch.
 | Sort                    | Salary by its USD equivalent, date in both directions; missing values last                        |
 | Combined state          | Query, country, sort, page and job in the URL; reload and back/forward restore the view           |
 | Loading                 | Skeletons; the previous results stay visible while the next page or query loads                   |
-| Empty                   | "No jobs match 'xyz' in Canada" with a "Clear filters" button                                     |
-| Error                   | The problem `detail` with Retry; a 4xx is not retried, a 5xx is retried twice                     |
+| Empty                   | "No jobs match 'xyz' in Canada", with a "Clear filters" button when a query or country is set     |
+| Error                   | A failed first load shows the problem `detail` with Retry (a 4xx is not retried, a 5xx is retried twice); a failed refetch keeps the previous results |
 | Job no longer available | A selected job that is not approved (404) says so and links back to the results                   |
 | Pagination              | Resets to page 1 on a new query or filter; a page past the end links to the last page             |
 | Accessibility           | Labelled search input and select, result count announced with `aria-live`, results are links      |
