@@ -143,7 +143,7 @@ duplicates in results without changing storage.
   Below the `lg` breakpoint the page shows one column: the list, or the selected job with a
   link back to the results.
 - **The URL is the only UI state.** Query, country, sort, page and selected job live in the
-  query string and are parsed by one schema (`frontend/src/routes/jobsSearch.ts`), so every
+  query string and are parsed by one schema (`frontend/src/routes/jobs.search.ts`), so every
   view can be shared, survives a reload and works with back/forward. A hand-edited value that
   fails the schema falls back to its default instead of sending an invalid request. Changing
   the query, country or sort resets the page and clears the selected job.

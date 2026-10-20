@@ -11,7 +11,7 @@ import {
   ListSkeleton,
   PageOutOfRange,
 } from '../components/States'
-import { pageCount } from './jobsSearch'
+import { pageCount } from './jobs.search'
 
 const route = getRouteApi('/')
 

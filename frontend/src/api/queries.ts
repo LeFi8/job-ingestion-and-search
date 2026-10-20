@@ -1,5 +1,5 @@
 import { QueryClient, keepPreviousData, skipToken, useQuery } from '@tanstack/react-query'
-import type { JobsSearch } from '../routes/jobsSearch'
+import type { JobsSearch } from '../routes/jobs.search'
 import { api } from './client'
 import type { Problem } from './client'
 

@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { pageCount } from '../routes/jobsSearch'
+import { pageCount } from '../routes/jobs.search'
 import { Button } from './ui/button'
 
 export function Pagination({

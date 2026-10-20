@@ -4,7 +4,7 @@ import { useRef, useState } from 'react'
 import type { JobsPage, Sort } from '../api/client'
 import { formatCountry } from '../lib/format'
 import { useDebouncedCallback } from '../hooks/useDebouncedCallback'
-import { maxQueryLength, sortValues } from '../routes/jobsSearch'
+import { maxQueryLength, sortValues } from '../routes/jobs.search'
 import { Input } from './ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select'
 

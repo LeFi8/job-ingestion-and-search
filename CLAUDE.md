@@ -31,7 +31,7 @@ Tools are pinned in `mise.toml` (Go, Node). Run everything through mise or with 
 - Backend packages are named by role (`ingestion`, `approval`, `storage`, `search`, `httpapi`, `outbox`); the technology goes in type or file names (`storage/postgres.go`, `langdetect.Lingua`).
 - SQL lives in `backend/internal/storage/queries/*.sql`; wrap sqlc rows in `storage` types instead of leaking `sqlc` types to other packages.
 - Config comes only from env vars via `internal/config`; a missing var is an error, never a default.
-- Frontend: the URL is the only UI state (`routes/jobsSearch.ts`); server state lives in TanStack Query (`api/queries.ts`). API types come only from the generated `src/api/schema.d.ts`. The UI never re-implements search, filtering or sorting.
+- Frontend: the URL is the only UI state (`routes/jobs.search.ts`); server state lives in TanStack Query (`api/queries.ts`). API types come only from the generated `src/api/schema.d.ts`. The UI never re-implements search, filtering or sorting.
 - Frontend tests run with `TZ=America/New_York` (set in `vite.config.ts`); date assertions depend on it.
 - Pin exact dependency versions (`frontend/.npmrc` has `save-exact=true`).
 - Tests mock only the network (MSW in the frontend, fakes at the store/search interfaces in Go). Never mock components, hooks or domain logic.
