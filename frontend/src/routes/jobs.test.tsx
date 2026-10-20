@@ -184,7 +184,7 @@ test('an empty result names the search and clearing filters restores the list', 
   const { history } = await renderApp('/?q=zzz&country=CA')
 
   expect(await within(jobList()).findByText("No jobs match 'zzz' in Canada")).toBeInTheDocument()
-  expect(jobDetail()).toBeEmptyDOMElement()
+  expect(screen.queryByRole('region', { name: 'Job details' })).toBeNull()
   expect(screen.getByRole('combobox', { name: 'Country' })).toHaveTextContent('Canada (0)')
 
   await user.click(within(jobList()).getByRole('button', { name: 'Clear filters' }))
@@ -307,6 +307,29 @@ test('clearing filters during the debounce keeps them clear', async () => {
 
   expect(urlParams().has('q')).toBe(false)
   expect(screen.getByRole('searchbox', { name: 'Search job titles' })).toHaveValue('')
+})
+
+test('clearing an empty search shows loading, not the previous empty result', async () => {
+  installApi()
+  server.use(
+    http.get('/api/jobs', async ({ request }) => {
+      if (new URL(request.url).searchParams.get('q') === 'zzz') {
+        return HttpResponse.json({ ...listPage, items: [], total: 0, facets: { country: [] } })
+      }
+      await delay(1000)
+      return undefined
+    }),
+  )
+  const user = userEvent.setup()
+  await renderApp('/?q=zzz')
+  await within(jobList()).findByText("No jobs match 'zzz'")
+
+  await user.click(within(jobList()).getByRole('button', { name: 'Clear filters' }))
+
+  expect(
+    await within(jobList()).findByRole('status', { name: 'Loading jobs' }, { timeout: 500 }),
+  ).toBeInTheDocument()
+  expect(within(jobList()).queryByText(/^No jobs/)).toBeNull()
 })
 
 test('escape in an empty search keeps page and job', async () => {
