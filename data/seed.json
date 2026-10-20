@@ -1,0 +1,1229 @@
+[
+  {
+    "title": "Principal Distributed Systems Engineer",
+    "description": "Architect and build high-throughput distributed transaction engines using Go, gRPC, and Apache Kafka. Lead technical designs for fault-tolerant microservices across multi-region cloud deployments.",
+    "company": "Apex Infrastructure",
+    "location": {
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 215000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-01",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Staff Platform Engineer",
+    "description": "Scale Kubernetes clusters, develop internal developer platforms, and optimize container orchestrations on AWS. Drive infrastructure as code initiatives with Terraform and automate CI/CD pipelines.",
+    "company": "CloudScale Dynamics",
+    "location": {
+      "city": "Seattle",
+      "state": "WA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 195000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-02",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Backend Engineer (Go & PostgreSQL)",
+    "description": "Design resilient REST and gRPC services in Go backed by PostgreSQL and Redis. Collaborate with frontend teams to deliver low-latency web APIs powering fintech consumer products.",
+    "company": "NovaPay Systems",
+    "location": "New York, NY, USA",
+    "salary": 165000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-03",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Staff Frontend Architect",
+    "description": "Lead modern web architecture across large React, TypeScript, and Next.js applications. Establish design system standards, component libraries, and frontend performance monitoring.",
+    "company": "Horizon Media Labs",
+    "location": {
+      "city": "Austin",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 185000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-04",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Site Reliability Engineer (SRE)",
+    "description": "Maintain reliability, scalability, and observability for tier-1 web services. Manage incident response, SLO/SLA tracking, Prometheus alerts, and chaos engineering experiments.",
+    "company": "Ironclad Services",
+    "location": "Boston, MA, USA",
+    "salary": 155000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-05",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead Machine Learning Engineer",
+    "description": "Deploy deep learning models and large language model pipelines into low-latency production inference environments using Python, PyTorch, Triton, and Ray.",
+    "company": "Cognitive AI Systems",
+    "location": {
+      "city": "San Jose",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 205000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-06",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead Cloud Security Engineer",
+    "description": "Harden cloud infrastructure across AWS and GCP environments. Implement identity federation, automated vulnerability scanning, container security tooling, and zero-trust policies.",
+    "company": "Aegis Cyber Defense",
+    "location": {
+      "city": "Denver",
+      "state": "CO",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 175000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-07",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Data Engineer (Streaming Pipelines)",
+    "description": "Build petabyte-scale real-time data ingestion pipelines using Apache Flink, Kafka, and Snowflake. Work closely with analytics engineers to define robust data contracts.",
+    "company": "Vanguard Analytics",
+    "location": "Chicago, IL, USA",
+    "salary": 160000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-08",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Director of Engineering, Core Services",
+    "description": "Lead and mentor four engineering teams delivering foundational cloud services. Own technical roadmap, headcount planning, operational excellence, and architecture reviews.",
+    "company": "Nexus Enterprise Group",
+    "location": {
+      "city": "New York",
+      "state": "NY",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 240000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-09",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior iOS Engineer",
+    "description": "Craft high-performance consumer iOS applications in Swift and SwiftUI. Focus on offline-first caching, smooth animations, and tight integration with device hardware APIs.",
+    "company": "Verve Mobile",
+    "location": {
+      "city": "San Diego",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 150000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-10",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Android Engineer",
+    "description": "Develop and maintain robust Android applications written in modern Kotlin. Utilize Jetpack Compose, Coroutines, Flow, and clean MVVM architecture.",
+    "company": "Pulse Technologies",
+    "location": "Atlanta, GA, USA",
+    "salary": 148000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-11",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Principal Solutions Architect",
+    "description": "Partner with enterprise customers to design resilient cloud architectures on AWS. Guide modernization strategies, migration plans, and zero-downtime database conversions.",
+    "company": "Elevate Consulting Partners",
+    "location": {
+      "city": "Washington",
+      "state": "DC",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 190000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-12",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Full Stack Engineer (React & Python)",
+    "description": "Full stack engineer experienced in building fast web applications with React, TypeScript, FastAPI, and PostgreSQL. Responsible for end-to-end feature delivery and automated testing.",
+    "company": "Crestline Health",
+    "location": "Raleigh, NC, USA",
+    "salary": 142000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-13",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Database Administrator (PostgreSQL)",
+    "description": "Optimize multi-terabyte PostgreSQL clusters, manage partitioning, connection pooling with PgBouncer, replication, failover with Patroni, and query tuning.",
+    "company": "DataShield Operations",
+    "location": {
+      "city": "Dallas",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 152000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-14",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead Product Manager, Developer Tooling",
+    "description": "Drive product strategy for our developer platform and CLI tools. Conduct user research with software engineers, prioritize backlog, and define product roadmaps.",
+    "company": "DevVelocity Systems",
+    "location": "San Francisco, CA, USA",
+    "salary": 178000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-15",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead DevOps Consultant",
+    "description": "Deliver cloud transformation and CI/CD automation consulting to Fortune 500 clients. Expertise in Kubernetes, Helm, GitLab CI, and Terraform.",
+    "company": "Stratus Consulting Group",
+    "location": {
+      "city": "Austin",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 85,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-16",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Embedded Systems Architect",
+    "description": "Develop real-time embedded software in C and modern C++ for autonomous IoT devices. Experience with RTOS, hardware debugging protocols, and low-power microcontrollers.",
+    "company": "NexDrive Robotics",
+    "location": "Pittsburgh, PA, USA",
+    "salary": 165000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-17",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Information Security Architect",
+    "description": "Define enterprise security architecture, cryptographic standards, and threat modeling protocols. Lead penetration testing remediation and compliance audits.",
+    "company": "Sentinel Financial",
+    "location": {
+      "city": "Charlotte",
+      "state": "NC",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 182000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-18",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Staff Quantitative Developer",
+    "description": "Build high-frequency trading execution algorithms and order management engines in C++20. Optimize Linux kernel network bypass libraries for ultra-low latency.",
+    "company": "Centaur Capital Technologies",
+    "location": "New York, NY, USA",
+    "salary": 260000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-19",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Cloud Infrastructure Consultant",
+    "description": "Advise enterprise clients on microservices refactoring and multi-cloud resilience strategies across Azure and AWS. Lead technical discovery workshops.",
+    "company": "OmniCloud Advisors",
+    "location": "Chicago, IL, USA",
+    "salary": {
+      "value": 72,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-20",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Product Designer (Design Systems)",
+    "description": "Lead the evolution of our enterprise design system in Figma and code. Collaborate closely with frontend architects to ensure accessibility, consistency, and token automation.",
+    "company": "Craftwork Labs",
+    "location": {
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 155000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-21",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Principal QA Automation Architect",
+    "description": "Architect enterprise automated test frameworks using Playwright, Go, and k6. Build continuous performance testing into CI/CD pipelines to catch regressions before production.",
+    "company": "HyperTest Labs",
+    "location": "Minneapolis, MN, USA",
+    "salary": 162000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-22",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Rust Systems Programmer",
+    "description": "Implement high-throughput storage engines and peer-to-peer networking layers in Rust. Profile memory usage, eliminate allocations, and ensure memory safety without garbage collection.",
+    "company": "Substrate Protocol",
+    "location": {
+      "city": "Austin",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 190000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-23",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead Analytics Engineer (dbt & BigQuery)",
+    "description": "Design modular data transformation models using dbt and BigQuery. Establish data testing standards, documentation catalogs, and business metric consistency across business units.",
+    "company": "MetricForge",
+    "location": "Philadelphia, PA, USA",
+    "salary": 145000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-24",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Technical Program Manager, Cloud",
+    "description": "Orchestrate large-scale datacenter migrations and cloud cost optimization initiatives across global engineering organizations. Manage cross-team dependencies and executive reporting.",
+    "company": "Starlight Enterprise",
+    "location": {
+      "city": "Seattle",
+      "state": "WA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 168000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-25",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead Cloud Infrastructure Engineer",
+    "description": "Architect resilient cloud environments on AWS for Canada's leading e-commerce platforms. Deep experience with Terraform, Kubernetes, and automated deployment pipelines.",
+    "company": "MapleCloud Technologies",
+    "location": {
+      "city": "Toronto",
+      "state": "ON",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 165000,
+      "currency": "CAD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-26",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Backend Developer (Distributed Systems)",
+    "description": "Develop scalable distributed services in Go and Java. Experience with event sourcing, Apache Kafka, Cassandra, and high-availability database replication.",
+    "company": "Northern Byte Systems",
+    "location": "Vancouver, BC, Canada",
+    "salary": 158000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-27",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Développeur Full Stack Senior (Go et React)",
+    "description": "Nous recherchons un développeur full stack senior pour concevoir des applications web interactives et des microservices fiables en Go et React. Vous participerez aux revues de code et aux choix d'architecture logicielle.",
+    "company": "Solutions Logicielles Apex",
+    "location": {
+      "city": "Montreal",
+      "state": "QC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 150000,
+      "currency": "CAD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-28",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Architecte de Données Senior",
+    "description": "Rejoignez notre équipe d'experts à Montréal pour diriger la conception de notre entrepôt de données infonuagique. Vous modéliserez les flux de données avec dbt et Snowflake pour optimiser les performances d'affaires.",
+    "company": "Analytique Laurentienne",
+    "location": "Montreal, QC, Canada",
+    "salary": 170000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-29",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Senior Machine Learning Specialist",
+    "description": "Develop and deploy computer vision and conversational AI models for medical imaging diagnostics. Work closely with healthcare domain experts and clinical researchers.",
+    "company": "Northstar AI Health",
+    "location": {
+      "city": "Toronto",
+      "state": "ON",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 135000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-30",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Principal SRE (Site Reliability Engineer)",
+    "description": "Lead incident response frameworks, error budget policies, and chaos testing across Canadian banking infrastructure. Drive cloud automation and zero-trust security postures.",
+    "company": "Great Lakes Financial Technologies",
+    "location": "Ottawa, ON, Canada",
+    "salary": 180000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-03-31",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Staff Frontend Engineer (TypeScript & Next.js)",
+    "description": "Build world-class user interfaces using modern React, TypeScript, and server components. Champion web performance, Core Web Vitals, and responsive accessibility standards.",
+    "company": "Pacific Coast Interactive",
+    "location": {
+      "city": "Vancouver",
+      "state": "BC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 152000,
+      "currency": "CAD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-01",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Directeur de l'Ingénierie Logicielle",
+    "description": "Superviser les équipes de développement logiciel réparties au Québec. Établir les priorités technologiques, encadrer les gestionnaires d'ingénierie et assurer la livraison ponctuelle des produits.",
+    "company": "Technologies Numériques Québec",
+    "location": {
+      "city": "Quebec",
+      "state": "QC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 195000,
+      "currency": "CAD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-02",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Senior DevOps Specialist",
+    "description": "Automate cloud resources and infrastructure deployment in AWS and Azure. Extensive experience with Ansible, Terraform, containerization, and monitoring tools.",
+    "company": "Prairie Cloud Systems",
+    "location": "Calgary, AB, Canada",
+    "salary": 155000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-03",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Solutions Consultant",
+    "description": "Deliver technical consulting and implementation for enterprise customer data platforms. Build custom ETL pipelines and integrate CRM systems.",
+    "company": "Boreal Digital Consulting",
+    "location": {
+      "city": "Toronto",
+      "state": "ON",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 75,
+      "currency": "CAD",
+      "unit": "hourly"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-04",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Staff Security Engineer",
+    "description": "Conduct application security audits, source code reviews, and threat modeling for financial technology platforms. Manage bug bounty programs and external security assessments.",
+    "company": "ShieldPoint Software",
+    "location": "Toronto, ON, Canada",
+    "salary": 168000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-05",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Ingénieur DevOps et Fiabilité",
+    "description": "Responsable de l'automatisation de nos pipelines CI/CD et de la haute disponibilité de notre infrastructure infonuagique. Expérience avancée avec Kubernetes, Terraform et Prometheus.",
+    "company": "Infrastructures Cloud Montréal",
+    "location": {
+      "city": "Montreal",
+      "state": "QC",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 148000,
+      "currency": "CAD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-06",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Senior iOS Developer",
+    "description": "Develop native iOS applications for mobile commerce and payments. Implement elegant user interfaces in SwiftUI and maintain continuous integration with Xcode Cloud.",
+    "company": "Frontier App Studios",
+    "location": "Vancouver, BC, Canada",
+    "salary": 150000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-07",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Principal Remote Systems Architect",
+    "description": "Lead architecture for globally distributed consensus engines and database storage engines. Work 100% remotely with a distributed global team of systems engineers.",
+    "company": "Decentralized Core Labs",
+    "location": "Remote",
+    "salary": 210000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-08",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Cloud Native Engineer",
+    "description": "Build cloud-native microservices using Go, Kubernetes, and Envoy service mesh. Lead open-source contributions and maintain high reliability for critical backend services.",
+    "company": "Distributed Horizons",
+    "location": "Remote, USA",
+    "salary": 172000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-09",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Lead Full Stack Architect (Remote)",
+    "description": "Drive end-to-end full stack architecture for our flagship SaaS platform. Design modern React frontends backed by event-driven microservices running on AWS.",
+    "company": "OmniSync Global",
+    "location": {
+      "city": "Remote",
+      "state": "",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 185000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-10",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Staff Backend Engineer, Payment Infrastructure",
+    "description": "Design mission-critical ledger and payout processing pipelines handling millions of transactions daily. Ensure strict PCI-DSS compliance and zero data loss.",
+    "company": "PaySphere Global",
+    "location": "Remote",
+    "salary": 180000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-11",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Site Reliability Engineer (Remote - Europe)",
+    "description": "Ensure the reliability and performance of our European edge infrastructure. Automate deployments with Ansible, monitor global traffic, and participate in a follow-the-sun on-call rotation.",
+    "company": "EdgeScale Network",
+    "location": {
+      "city": "Dublin",
+      "state": "Leinster",
+      "country": "Ireland"
+    },
+    "salary": {
+      "value": 105000,
+      "currency": "EUR"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-12",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Lead Software Architect (Remote - UK)",
+    "description": "Oversee enterprise software architecture and cloud migration programs for UK and international clients. Deep expertise in DDD, microservices, and event-driven systems.",
+    "company": "Solstice Technology Group",
+    "location": "London, UK",
+    "salary": 92000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-13",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Rust / Go Engineer (Remote - Poland)",
+    "description": "Develop low-latency blockchain indexing tools and cryptographic verification services in Rust and Go. Work fully remotely with competitive international compensation.",
+    "company": "Web3 Data Infrastructure",
+    "location": {
+      "city": "Warsaw",
+      "state": "Mazovia",
+      "country": "Poland"
+    },
+    "salary": {
+      "value": 460000,
+      "currency": "PLN"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-14",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Cloud Security Consultant (Remote)",
+    "description": "Provide expert guidance on container security, Kubernetes hardening, and compliance automation across AWS and Google Cloud environments.",
+    "company": "Fortress Cloud Consulting",
+    "location": "Remote",
+    "salary": {
+      "value": 90,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-15",
+    "company_type": "Consulting Agency",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Principal Data Platform Engineer (Remote)",
+    "description": "Architect internal data lakehouse infrastructure supporting batch and real-time streaming analytics. Manage Apache Spark clusters, Iceberg tables, and Kafka clusters.",
+    "company": "StreamForge Systems",
+    "location": "Remote, USA",
+    "salary": 195000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-16",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Lead Product Manager, Cloud Security (Remote)",
+    "description": "Drive end-to-end product discovery and execution for our enterprise cloud security compliance dashboard. Define key metrics, collaborate with engineering, and present to clients.",
+    "company": "CloudGuard Tech",
+    "location": "Remote",
+    "salary": 175000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-17",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Machine Learning Engineer (Remote - UK)",
+    "description": "Design and productionize machine learning models for natural language processing and recommendations. Experience with transformer architectures, PyTorch, and ONNX runtime.",
+    "company": "Cortex Analytics UK",
+    "location": {
+      "city": "Manchester",
+      "state": "England",
+      "country": "UK"
+    },
+    "salary": {
+      "value": 88000,
+      "currency": "GBP"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-18",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Staff Infrastructure Engineer (Remote)",
+    "description": "Responsible for bare-metal server provisioning, internal DNS, network topology, and global traffic routing for high-volume content distribution networks.",
+    "company": "NetMesh Networks",
+    "location": "Remote",
+    "salary": 185000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-19",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Junior Web Developer",
+    "description": "Assist senior developers in updating company landing pages using HTML, CSS, and basic JavaScript. Great introductory learning opportunity.",
+    "company": "SmallBiz Web Design",
+    "location": {
+      "city": "Austin",
+      "state": "TX",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 55000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-20",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Helpdesk Support Specialist",
+    "description": "Provide tier-1 IT desktop support, manage user access in Active Directory, configure laptops, and troubleshoot local office hardware problems.",
+    "company": "FirstResponse IT",
+    "location": "Dallas, TX, USA",
+    "salary": 48000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-21",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Associate Quality Assurance Tester",
+    "description": "Execute manual test scripts across web and mobile platforms. Document reproducible defect reports and verify bug fixes before releases.",
+    "company": "QA Dynamics",
+    "location": {
+      "city": "Phoenix",
+      "state": "AZ",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 32,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-22",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Junior Data Analyst",
+    "description": "Generate weekly reporting dashboards using Excel, SQL, and Tableau. Maintain data cleanliness and assist financial analysts with inquiries.",
+    "company": "Maple Leaf Retail",
+    "location": "Toronto, ON, Canada",
+    "salary": 72000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-23",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Java Developer (Contract-to-Hire)",
+    "description": "Our client is seeking an experienced enterprise Java developer with Spring Boot and Oracle database expertise for a long-term banking project.",
+    "company": "Apex Talent Placement",
+    "location": {
+      "city": "New York",
+      "state": "NY",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 160000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-24",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Cloud Security Engineer",
+    "description": "Recruiting for an exclusive enterprise client in Chicago. Must have hands-on AWS security automation and Terraform experience.",
+    "company": "CyberRecruit Staffing",
+    "location": "Chicago, IL, USA",
+    "salary": 175000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-25",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Lead Mobile Architect",
+    "description": "Immediate staffing opportunity for an experienced mobile architect proficient in React Native and native iOS deployment.",
+    "company": "Global Talent Hunters",
+    "location": {
+      "city": "Toronto",
+      "state": "ON",
+      "country": "Canada"
+    },
+    "salary": {
+      "value": 160000,
+      "currency": "CAD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-26",
+    "company_type": "Staffing Firm",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Frontend Engineering Intern (Summer 2024)",
+    "description": "Summer internship program for university students interested in modern web development. Learn React, TypeScript, and automated testing.",
+    "company": "InnovateX Labs",
+    "location": {
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 35,
+      "currency": "USD",
+      "unit": "hourly"
+    },
+    "employment_type": "Internship",
+    "posting_date": "2024-04-27",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Contract Technical Writer",
+    "description": "Document developer APIs and create SDK reference manuals on a 6-month contract engagement. Experience with Markdown and OpenAPI specs.",
+    "company": "API Docs Consulting",
+    "location": "Seattle, WA, USA",
+    "salary": 110000,
+    "employment_type": "Contract",
+    "posting_date": "2024-04-28",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Part-Time Systems Administrator",
+    "description": "Manage internal Linux servers and office network infrastructure on a part-time 20 hours per week schedule.",
+    "company": "Echo Systems Group",
+    "location": {
+      "city": "Denver",
+      "state": "CO",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 115000,
+      "currency": "USD"
+    },
+    "employment_type": "Part-Time",
+    "posting_date": "2024-04-29",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Backend Engineer (Fintech)",
+    "description": "Join our London engineering headquarters to build high-scale payment processing APIs using Go and PostgreSQL. In-person role in central London.",
+    "company": "Thames Capital Software",
+    "location": "London, UK",
+    "salary": 95000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-04-30",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Cloud Infrastructure Architect",
+    "description": "Design secure multi-region cloud systems for automotive telemetry. In-person engineering position based at our Munich research campus.",
+    "company": "Bavaria Mobility Labs",
+    "location": {
+      "city": "Munich",
+      "state": "Bavaria",
+      "country": "Germany"
+    },
+    "salary": {
+      "value": 110000,
+      "currency": "EUR"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-01",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Staff Site Reliability Engineer",
+    "description": "Drive reliability and infrastructure automation for European logistics platforms. In-person position located in Dublin.",
+    "company": "Emerald Logistics Tech",
+    "location": "Dublin, Ireland",
+    "salary": 115000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-02",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Distributed Database Engineer",
+    "description": "Develop high-performance storage engines and distributed consensus systems. Based on-site at our Sydney engineering office.",
+    "company": "Southern Cross Data",
+    "location": {
+      "city": "Sydney",
+      "state": "NSW",
+      "country": "Australia"
+    },
+    "salary": {
+      "value": 160000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-03",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Ingénieur Logiciel Senior (Systèmes Embarqués)",
+    "description": "Nous développons des systèmes embarqués pour l'aéronautique à Toulouse. Vous participerez à la conception des logiciels temps réel en C et C++ sous des contraintes de sécurité rigoureuses.",
+    "company": "AéroSystèmes France",
+    "location": "Toulouse, France",
+    "salary": 95000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-04",
+    "company_type": "Direct Employer",
+    "language": "French",
+    "remote": false
+  },
+  {
+    "title": "Senior Softwareentwickler (Backend)",
+    "description": "Wir entwickeln skalierbare Cloud-Lösungen für den industriellen Mittelstand. Sie übernehmen Verantwortung für die Architektur von Webservices in Go und Docker.",
+    "company": "Rheinland Cloud GmbH",
+    "location": {
+      "city": "Cologne",
+      "state": "NRW",
+      "country": "Germany"
+    },
+    "salary": {
+      "value": 105000,
+      "currency": "EUR"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-05",
+    "company_type": "Direct Employer",
+    "language": "German",
+    "remote": false
+  },
+  {
+    "title": "Desarrollador Backend Senior (Microservicios)",
+    "description": "Buscamos un desarrollador backend experimentado para diseñar microservicios de alto rendimiento en Go y Kubernetes. Trabajará con bases de datos distribuidas y mensajería Kafka.",
+    "company": "Iberia Software Solutions",
+    "location": "Madrid, Spain",
+    "salary": 85000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-06",
+    "company_type": "Direct Employer",
+    "language": "Spanish",
+    "remote": false
+  },
+  {
+    "title": "Senior Solutions Engineer",
+    "description": "Support pre-sales engagements and technical demonstrations for enterprise infrastructure software. Strong technical communication skills required.",
+    "company": "ClearSky Enterprise",
+    "location": "San Francisco, CA, USA",
+    "salary": 6000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-07",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Cloud Migration Architect",
+    "description": "Architect legacy datacenter migrations to public cloud providers. Design secure networking, storage, and automated deployment pipelines.",
+    "company": "CloudPathway Partners",
+    "location": {
+      "city": "New York",
+      "state": "NY",
+      "country": "USA"
+    },
+    "salary": 8500,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-08",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Enterprise Cloud Architect",
+    "description": "Lead enterprise cloud modernization and IT portfolio rationalization for multinational conglomerates.",
+    "company": "Global Pinnacle Tech",
+    "location": "Chicago, IL, USA",
+    "salary": null,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-09",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "",
+    "description": "Senior level software engineering role focusing on cloud microservices and scalable API development.",
+    "company": "Stealth Analytics",
+    "location": "Seattle, WA, USA",
+    "salary": {
+      "value": 165000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-10",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Senior Systems Reliability Specialist",
+    "description": "Build automated reliability tooling and monitor high-volume cloud transactions across AWS regions.",
+    "company": "TrueNorth Systems",
+    "location": "Toronto, ON, Canada",
+    "salary": 160000,
+    "employment_type": "Full-Time",
+    "posting_date": "",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Principal Kubernetes Infrastructure Architect",
+    "description": "Design multi-tenant Kubernetes platform managing thousands of production microservice deployments.",
+    "company": "KubeCloud Enterprise",
+    "location": {
+      "city": "San Francisco",
+      "state": "CA",
+      "country": "USA"
+    },
+    "salary": {
+      "value": 220000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-11T14:30:00Z",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Staff Protocol Engineer",
+    "description": "Implement consensus algorithms and low-level cryptographic proofs for next-generation distributed ledgers. 100% remote anywhere.",
+    "company": "ZeroKnowledge Labs",
+    "location": null,
+    "salary": {
+      "value": 200000,
+      "currency": "USD"
+    },
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-12",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Cloud Security Engineer (Remote - UK)",
+    "description": "Help secure our international financial SaaS platform against modern advanced persistent threats. Deep AWS and cloud security experience required.",
+    "company": "FinSec Global UK",
+    "location": "Edinburgh, UK",
+    "salary": 90000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-13",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Senior Site Reliability Specialist (Hourly)",
+    "description": "Provide critical infrastructure support and disaster recovery planning for enterprise customers.",
+    "company": "HighAvailability Ops",
+    "location": "Denver, CO, USA",
+    "salary": 65,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-14",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": false
+  },
+  {
+    "title": "Junior Cloud Support Engineer (Remote - UK)",
+    "description": "Provide first-line cloud triage and ticket resolution for UK clients.",
+    "company": "UK CloudCare",
+    "location": "London, UK",
+    "salary": 60000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-15",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Mid-level Backend Developer (Remote - Poland)",
+    "description": "Develop backend services in Java and Spring Boot for European clients.",
+    "company": "Polska Tech Soft",
+    "location": "Warsaw, Poland",
+    "salary": 250000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-16",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Junior SRE (Remote - Ireland)",
+    "description": "Monitor system telemetry, participate in alerts, and update runbooks.",
+    "company": "Celtic Web Systems",
+    "location": "Dublin, Ireland",
+    "salary": 70000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-17",
+    "company_type": "Direct Employer",
+    "language": "English",
+    "remote": true
+  },
+  {
+    "title": "Principal Security Researcher",
+    "description": "Perform vulnerability discovery and reverse engineering on enterprise software components. Publish security advisories and collaborate with vendors.",
+    "company": "Vulnerability Intelligence Group",
+    "location": "San Francisco, CA, USA",
+    "salary": 185000,
+    "employment_type": "Full-Time",
+    "posting_date": "2024-05-18",
+    "company_type": "Software Vendor",
+    "language": "English",
+    "remote": false
+  }
+]

@@ -33,7 +33,8 @@ URL-safe: Compose builds `DATABASE_URL` from it, and `@`, `/`, `:` or `#` break 
 | --- | --- | --- |
 | Start Postgres and Elasticsearch | `mise run compose` | `docker compose up -d --wait` |
 | Apply migrations | `mise run migrate` | `go -C backend run ./cmd/migrate` |
-| Ingest the sample feed | `mise run seed` | `go -C backend run ./cmd/ingest ../data/sample.json` |
+| Ingest the demo feed | `mise run ingest:seed` | `go -C backend run ./cmd/ingest ../data/seed.json` |
+| Optionally add the sample feed | `mise run ingest:sample` | `go -C backend run ./cmd/ingest ../data/sample.json` |
 | Run worker, API and UI together | `mise run dev` | the three commands below, one terminal each |
 | Index into Elasticsearch | `mise run worker` | `go -C backend run ./cmd/worker` |
 | Serve the API on `:8080` | `mise run api` | `go -C backend run ./cmd/api` |
@@ -44,7 +45,7 @@ Check the backend on its own:
 
 ```sh
 curl -s localhost:8080/healthz -o /dev/null -w '%{http_code}\n'   # 200
-curl -s localhost:8080/api/jobs | jq .total                        # 11
+curl -s localhost:8080/api/jobs | jq .total
 ```
 
 Each binary reads only its own environment keys and exits listing every missing or invalid
@@ -168,7 +169,7 @@ What each suite covers, and the full list of CI checks, is in [testing](testing.
 - **`mise ERROR … not trusted`:** run `mise trust` once in a fresh clone.
 - **Compose fails with "port is already allocated":** something else uses 5432, 9200, 8080 or
   5173. Stop it, or the other copy of this stack.
-- **Search returns 0 jobs but the seed says `unchanged=20`:** the index is missing while
+- **Search returns 0 jobs but the ingest says `unchanged=20`:** the index is missing while
   Postgres still has the postings (for example after deleting `./volumes/elasticsearch`). Run
   `mise run reindex`.
 - **`set POSTGRES_PASSWORD in .env`:** `.env` is missing; copy it from `.env.example`.

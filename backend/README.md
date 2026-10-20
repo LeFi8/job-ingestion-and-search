@@ -72,9 +72,9 @@ A client that disconnects mid-search gets no response and is logged at INFO with
 With the sample feed loaded:
 
 ```sh
-curl -s 'localhost:8080/api/jobs' | jq '.total'                                  # 11
+curl -s 'localhost:8080/api/jobs' | jq '.total'
 curl -s 'localhost:8080/api/jobs?q=enginer' | jq '[.items[].title]'              # typo-tolerant match on "Engineer"
-curl -s 'localhost:8080/api/jobs?country=CA' | jq '.total, .facets.country'     # 2; facets still count US, CA and GB
+curl -s 'localhost:8080/api/jobs?country=CA' | jq '.total, .facets.country'     # facets still count every country
 curl -s 'localhost:8080/api/jobs?sort=salary_desc' | jq '[.items[].salary_usd_annual]'
 curl -s 'localhost:8080/api/jobs?sort=date_asc' | jq '.items[-1].title'          # "Growth Marketing Manager" (no date)
 curl -si 'localhost:8080/api/jobs?sort=bogus' | head -1                          # HTTP/1.1 400 Bad Request
@@ -145,6 +145,6 @@ the brief's "90k USD or more".
 
 Then bump `PolicyVersion` in the same file, add its fingerprint to
 `internal/ingestion/testdata/sample_decisions.json` (the failing `TestSampleFeedDecisions`
-prints it), and re-ingest the feed (`mise run seed`). The stored
+prints it), and re-ingest the feed (`mise run ingest:sample`). The stored
 content hash includes the policy version, so every posting is re-evaluated and re-enqueued,
 and the worker reindexes them.

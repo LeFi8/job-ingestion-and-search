@@ -33,7 +33,8 @@ Diagram, limitations and the path to production: [architecture](docs/architectur
 | [`frontend/`](frontend/README.md) | React app: search, filter, sort and job detail |
 | [`api/openapi.yaml`](api/openapi.yaml) | HTTP contract shared by backend and frontend |
 | [`docs/`](docs/) | Architecture, decisions, development and testing |
-| `data/sample.json` | The sample feed |
+| `data/seed.json` | The demo feed for the quick start |
+| `data/sample.json` | The sample feed from the brief |
 | `compose.yaml` | Postgres, Elasticsearch, the backend services and the UI |
 | `mise.toml` | Pinned tool versions and task shortcuts |
 | `.github/workflows/ci.yml` | CI for backend and frontend |
@@ -60,11 +61,21 @@ cp .env.example .env
 mise trust && mise run compose:all
 ```
 
+The stack starts empty. Ingest the demo feed (`--rm` drops the one-off container; the summary
+prints to the terminal):
+
+```sh
+docker compose run --rm ingest /data/seed.json
+```
+
+With mise: `mise run ingest:seed`. To also load the brief's sample feed, run the same with
+`/data/sample.json` (`mise run ingest:sample`).
+
 Then open <http://localhost:5173>.
 
-`--profile all` runs `migrate` and `seed` (ingests `data/sample.json`) once, then keeps
-`worker`, `api` and `web` running; without the profile only Postgres and Elasticsearch start. `docker compose logs
-seed` shows the ingest summary.
+`--profile all` runs `migrate` once, then keeps `worker`, `api` and `web` running; without
+the profile only Postgres and Elasticsearch start. `ingest` has its own profile, so `up`
+never runs it.
 
 Stop with `docker compose --profile all down`. Postgres and Elasticsearch keep their data in
 `./volumes/`, so the next `up` starts where you left off.

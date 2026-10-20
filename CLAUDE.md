@@ -16,7 +16,7 @@ Data flows one way: `cmd/ingest` → `ingestion` (normalize + `approval.Engine`)
 
 Tools are pinned in `mise.toml` (Go, Node). Run everything through mise or with `eval "$(mise env -s bash)"`. `mise` loads `.env`; copy `.env.example` if it is missing.
 
-- Stack: `mise run compose` (Postgres + ES only), then `mise run migrate`, `mise run seed` (loads `data/sample.json`), `mise run dev` (api + worker + Vite). `mise run compose:all` runs migrate, seed, api and worker in Docker instead.
+- Stack: `mise run compose` (Postgres + ES only), then `mise run migrate`, `mise run ingest:seed` (loads `data/seed.json`; `mise run ingest:sample` adds `data/sample.json`), `mise run dev` (api + worker + Vite). `mise run compose:all` runs migrate, api, worker and web in Docker instead; it never ingests, so ingest manually (`docker compose run --rm ingest /data/seed.json` or the mise tasks).
 - Backend (in `backend/`):
   - `mise run test` — unit tests.
   - `mise run test:integration` — `-tags integration`, needs Docker (testcontainers via `storage/pgtest`, `search/estest`).
